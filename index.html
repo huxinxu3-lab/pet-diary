@@ -88,8 +88,16 @@
     border:3px solid var(--gold-soft);
     display:flex; align-items:center; justify-content:center;
     box-shadow:0 6px 16px rgba(23,24,28,.25);
-    position:relative;
+    position:relative; overflow:hidden;
   }
+  .tag-badge img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  .avatar-edit-badge{
+    position:absolute; bottom:8px; right:calc(50% - 39px - 4px);
+    width:24px; height:24px; border-radius:50%; background:var(--ink);
+    border:2px solid var(--pearl); display:flex; align-items:center; justify-content:center;
+    color:var(--gold-soft); pointer-events:none;
+  }
+  .avatar-edit-badge svg{ width:12px; height:12px; }
   .tag-badge svg{width:38px; height:38px;}
   .tag-hole{
     position:absolute; top:-6px; left:50%; transform:translateX(-50%);
@@ -273,6 +281,7 @@
 </div>
 <div class="toast" id="toast"></div>
 <input type="file" id="importInput" accept="application/json" style="display:none">
+<input type="file" id="avatarInput" accept="image/*" style="display:none">
 
 <script>
 /* ================= Icons ================= */
@@ -292,6 +301,7 @@ const ICONS = {
   clipboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>`,
   bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>`,
   cloud: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h11a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.5 8.5 4.5 4.5 0 0 0 7 18z"/><path d="M12 11v6M9.5 14.5L12 12l2.5 2.5"/></svg>`,
+  camera: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>`,
   trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/></svg>`,
 };
 
@@ -316,7 +326,7 @@ async function loadObj(key, fallback){
   }catch(e){ return fallback; }
 }
 async function saveObj(key, obj){
-  try{ localStorage.setItem(STORAGE_PREFIX+key, JSON.stringify(obj)); }catch(e){ console.error('save failed', key, e); }
+  try{ localStorage.setItem(STORAGE_PREFIX+key, JSON.stringify(obj)); }catch(e){ console.error('save failed', key, e); showToast('保存失败，可能是头像图片太大'); }
 }
 
 /* ================= Date helpers ================= */
@@ -555,7 +565,8 @@ function renderHome(){
     <div class="home-header">
       <div class="tag-badge" onclick="openProfileEdit()">
         <div class="tag-hole"></div>
-        ${ICONS.paw.replace('currentColor','var(--gold-soft)')}
+        ${state.profile.avatar ? `<img src="${state.profile.avatar}" alt="头像">` : ICONS.paw.replace('currentColor','var(--gold-soft)')}
+        <div class="avatar-edit-badge">${ICONS.camera}</div>
       </div>
       <p class="pet-name" onclick="openProfileEdit()">${escapeHtml(state.profile.name || '狗狗')}</p>
       <p class="pet-sub">黑银迷你雪纳瑞</p>
@@ -846,12 +857,28 @@ function openEntryDetail(key, id){
 }
 
 /* ---- Profile edit ---- */
+let pendingAvatar = null;
 function openProfileEdit(){
+  pendingAvatar = null;
+  const avatarPreview = state.profile.avatar
+    ? `<img src="${state.profile.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+    : ICONS.paw.replace('currentColor','var(--gold-soft)');
   sheetContent.innerHTML = `
     <div class="sheet-grip"></div>
     <div class="sheet-head">
       <div class="sheet-title">狗狗信息</div>
       <div class="sheet-close" onclick="closeSheet()">取消</div>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:18px;">
+      <div id="avatarPreviewWrap" class="tag-badge" style="margin-bottom:10px; cursor:pointer;" onclick="document.getElementById('avatarInput').click()">
+        <div class="tag-hole"></div>
+        ${avatarPreview}
+        <div class="avatar-edit-badge">${ICONS.camera}</div>
+      </div>
+      <div style="display:flex; gap:14px;">
+        <span style="font-size:12.5px; color:var(--gold); font-weight:600; cursor:pointer;" onclick="document.getElementById('avatarInput').click()">更换头像</span>
+        ${state.profile.avatar ? `<span style="font-size:12.5px; color:var(--danger); font-weight:600; cursor:pointer;" onclick="removeAvatar()">移除头像</span>` : ''}
+      </div>
     </div>
     <div class="field"><label>名字</label><input id="p_name" type="text" value="${escapeHtml(state.profile.name||'')}"></div>
     <div class="field"><label>生日（选填）</label><input id="p_birthday" type="date" value="${escapeHtml(state.profile.birthday||'')}"></div>
@@ -859,10 +886,62 @@ function openProfileEdit(){
   `;
   overlay.classList.add('open');
 }
+
+function removeAvatar(){
+  pendingAvatar = 'REMOVE';
+  const wrap = document.getElementById('avatarPreviewWrap');
+  if(wrap){
+    wrap.innerHTML = `<div class="tag-hole"></div>${ICONS.paw.replace('currentColor','var(--gold-soft)')}<div class="avatar-edit-badge">${ICONS.camera}</div>`;
+  }
+}
+
+function resizeImageFile(file, maxSize, quality){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = function(e){
+      const img = new Image();
+      img.onload = function(){
+        let w = img.width, h = img.height;
+        const scale = Math.min(1, maxSize / Math.max(w,h));
+        w = Math.round(w*scale); h = Math.round(h*scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+document.getElementById('avatarInput').addEventListener('change', async function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const dataUrl = await resizeImageFile(file, 480, 0.85);
+    pendingAvatar = dataUrl;
+    const wrap = document.getElementById('avatarPreviewWrap');
+    if(wrap){
+      wrap.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"><div class="avatar-edit-badge">${ICONS.camera}</div>`;
+    }
+  }catch(err){
+    showToast('图片处理失败，换一张试试');
+  }
+  e.target.value = '';
+});
+
 function saveProfile(){
   state.profile.name = document.getElementById('p_name').value.trim() || '狗狗';
   state.profile.birthday = document.getElementById('p_birthday').value;
-  saveObj('profile', state.profile);
+  if(pendingAvatar === 'REMOVE'){ delete state.profile.avatar; }
+  else if(pendingAvatar){ state.profile.avatar = pendingAvatar; }
+  saveObj('profile', state.profile).then(ok=>{
+    if(ok === undefined){} // no-op, errors already logged in saveObj
+  });
   closeSheet();
   render();
   showToast('已保存');
