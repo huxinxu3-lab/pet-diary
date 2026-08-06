@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="雪纳瑞日记">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#17181c">
+<title>雪纳瑞日记</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17181c;
+    --panel:#1f2024;
+    --charcoal:#2b2d33;
+    --silver:#a7adb8;
+    --silver-soft:#dde0e6;
+    --pearl:#f5f3ee;
+    --card:#ffffff;
+    --line:#e6e2d8;
+    --gold:#c8933f;
+    --gold-soft:#f2ddb0;
+    --ink-soft:rgba(23,24,28,.62);
+    --ink-faint:rgba(23,24,28,.4);
+    --danger:#b8503b;
+    --good:#4c7a5e;
+    --font-display:'Fraunces', serif;
+    --font-body:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; background:var(--ink); overscroll-behavior-y:none;}
+  body{
+    font-family:var(--font-body);
+    color:var(--ink);
+    display:flex; justify-content:center;
+    min-height:100vh;
+    min-height:100dvh;
+  }
+  #app{
+    width:100%; max-width:480px;
+    background:var(--pearl);
+    min-height:100vh; min-height:100dvh;
+    position:relative;
+    display:flex; flex-direction:column;
+    overflow-x:hidden;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:20;
+    padding:calc(var(--safe-top) + 14px) 18px 12px;
+    background:linear-gradient(180deg, var(--pearl) 70%, rgba(245,243,238,0));
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px;
+  }
+  .topbar.solid{ background:var(--pearl); border-bottom:1px solid var(--line); }
+  .tb-btn{
+    width:36px; height:36px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--card); border:1px solid var(--line);
+    color:var(--ink); cursor:pointer; flex:none;
+  }
+  .tb-btn svg{width:18px; height:18px;}
+  .tb-title{
+    font-family:var(--font-display); font-weight:600; font-size:19px;
+    letter-spacing:.2px; flex:1; text-align:center; color:var(--ink);
+  }
+  .tb-spacer{width:36px; flex:none;}
+
+  /* ---------- Home ---------- */
+  .home-header{
+    padding:6px 20px 18px;
+  }
+  .tag-badge{
+    width:78px; height:78px; border-radius:50%;
+    margin:0 auto 12px;
+    background:radial-gradient(circle at 32% 28%, #3a3d44, var(--ink) 72%);
+    border:3px solid var(--gold-soft);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 6px 16px rgba(23,24,28,.25);
+    position:relative;
+  }
+  .tag-badge svg{width:38px; height:38px;}
+  .tag-hole{
+    position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    width:10px; height:10px; border-radius:50%;
+    background:var(--pearl); border:2px solid var(--gold);
+  }
+  .pet-name{
+    font-family:var(--font-display); font-size:26px; font-weight:600;
+    text-align:center; color:var(--ink); margin:0 0 2px;
+  }
+  .pet-sub{
+    text-align:center; color:var(--ink-soft); font-size:13px; margin:0;
+    letter-spacing:.3px;
+  }
+  .stat-row{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+    margin:16px 0 4px;
+  }
+  .stat-chip{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:10px 8px; text-align:center;
+  }
+  .stat-chip .v{ font-family:var(--font-mono); font-size:16px; font-weight:600; color:var(--ink);}
+  .stat-chip .l{ font-size:10.5px; color:var(--ink-faint); margin-top:2px; letter-spacing:.2px;}
+
+  .reminder-strip{
+    margin:14px 20px 0; padding:11px 14px;
+    background:var(--ink); border-radius:14px;
+    display:flex; align-items:center; gap:10px;
+    color:var(--gold-soft); font-size:12.5px;
+  }
+  .reminder-strip svg{width:16px; height:16px; flex:none; color:var(--gold);}
+  .reminder-strip b{color:#fff; font-weight:600;}
+
+  /* ---------- Grouped list (home grid) ---------- */
+  .group{ margin:22px 18px 0; }
+  .group-label{
+    font-size:11.5px; font-weight:600; letter-spacing:1.2px; text-transform:uppercase;
+    color:var(--ink-faint); margin:0 10px 8px;
+  }
+  .group-card{
+    background:var(--card); border-radius:16px; overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .mod-row{
+    display:flex; align-items:center; gap:12px;
+    padding:13px 14px; cursor:pointer;
+    border-bottom:1px solid var(--line);
+  }
+  .mod-row:last-child{ border-bottom:none; }
+  .mod-row:active{ background:#faf8f3; }
+  .mod-icon{
+    width:34px; height:34px; border-radius:10px; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--pearl); color:var(--charcoal);
+  }
+  .mod-icon svg{ width:18px; height:18px; }
+  .mod-text{ flex:1; min-width:0; }
+  .mod-text .t{ font-size:15px; font-weight:600; color:var(--ink); }
+  .mod-text .d{ font-size:11.5px; color:var(--ink-faint); margin-top:1px; }
+  .mod-count{
+    font-family:var(--font-mono); font-size:12px; color:var(--ink-faint);
+    background:var(--pearl); border-radius:8px; padding:3px 7px; flex:none;
+  }
+  .chev{ width:15px; height:15px; color:var(--ink-faint); flex:none; }
+
+  .bottom-pad{ height:40px; }
+
+  /* ---------- Detail view ---------- */
+  .detail-body{ padding:4px 18px 20px; flex:1; }
+  .summary-card{
+    background:var(--ink); color:var(--pearl); border-radius:18px;
+    padding:18px; margin:6px 0 18px;
+  }
+  .summary-card .big{
+    font-family:var(--font-mono); font-size:30px; font-weight:600; color:#fff;
+  }
+  .summary-card .unit{ font-size:14px; color:var(--silver); margin-left:4px; }
+  .summary-card .cap{ font-size:11.5px; color:var(--silver); letter-spacing:.3px; margin-top:2px;}
+  .delta{ font-size:12.5px; margin-top:8px; display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; }
+  .delta.up{ background:rgba(184,80,59,.18); color:#e19c8c; }
+  .delta.down{ background:rgba(76,122,94,.2); color:#9bd1b3; }
+  .delta.flat{ background:rgba(167,173,184,.18); color:var(--silver-soft); }
+  .chart-wrap{ margin-top:14px; }
+  .bar-row{ display:flex; align-items:center; gap:10px; margin:9px 0; font-size:12.5px; }
+  .bar-row .bl{ width:64px; flex:none; color:var(--silver); }
+  .bar-track{ flex:1; height:7px; border-radius:5px; background:rgba(255,255,255,.12); overflow:hidden;}
+  .bar-fill{ height:100%; background:var(--gold); border-radius:5px; }
+  .bar-row .bv{ width:56px; flex:none; text-align:right; font-family:var(--font-mono); color:#fff; }
+
+  .entry-card{
+    background:var(--card); border:1px solid var(--line); border-radius:15px;
+    padding:13px 14px; margin-bottom:10px; cursor:pointer;
+    display:flex; justify-content:space-between; gap:10px;
+  }
+  .entry-card:active{ background:#faf8f3; }
+  .entry-main .t{ font-size:14.5px; font-weight:600; color:var(--ink); }
+  .entry-main .s{ font-size:12.5px; color:var(--ink-soft); margin-top:3px; line-height:1.5; }
+  .entry-side{ flex:none; text-align:right; }
+  .entry-side .d{ font-size:11.5px; color:var(--ink-faint); font-family:var(--font-mono); }
+  .entry-side .tag{
+    display:inline-block; margin-top:5px; font-size:10.5px; padding:2px 8px;
+    border-radius:20px; background:var(--pearl); color:var(--charcoal); font-weight:600;
+  }
+
+  .empty-state{
+    text-align:center; padding:50px 20px 30px; color:var(--ink-faint);
+  }
+  .empty-state svg{ width:44px; height:44px; margin-bottom:12px; color:var(--silver); }
+  .empty-state p{ font-size:13.5px; margin:0; line-height:1.7; }
+  .empty-state b{ color:var(--ink-soft); }
+
+  .fab{
+    position:fixed; right:calc(50% - 240px + 20px); bottom:calc(24px + var(--safe-bottom));
+    width:54px; height:54px; border-radius:50%; background:var(--ink); color:#fff;
+    display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;
+    box-shadow:0 10px 24px rgba(23,24,28,.35); z-index:25;
+  }
+  .fab svg{ width:24px; height:24px; }
+  @media (max-width:520px){ .fab{ right:20px; } }
+
+  /* ---------- Sheet / modal ---------- */
+  .sheet-overlay{
+    position:fixed; inset:0; background:rgba(23,24,28,.45);
+    z-index:50; display:flex; align-items:flex-end; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .22s ease;
+  }
+  .sheet-overlay.open{ opacity:1; pointer-events:auto; }
+  .sheet{
+    width:100%; max-width:480px; background:var(--pearl);
+    border-radius:22px 22px 0 0; padding:14px 20px calc(24px + var(--safe-bottom));
+    max-height:88vh; overflow-y:auto;
+    transform:translateY(100%); transition:transform .28s cubic-bezier(.32,.72,0,1);
+  }
+  .sheet-overlay.open .sheet{ transform:translateY(0); }
+  .sheet-grip{ width:36px; height:4px; background:var(--line); border-radius:3px; margin:2px auto 14px; }
+  .sheet-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .sheet-title{ font-family:var(--font-display); font-size:19px; font-weight:600; }
+  .sheet-close{ font-size:13.5px; color:var(--ink-soft); cursor:pointer; padding:4px; }
+
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:6px; letter-spacing:.2px;}
+  .field input, .field select, .field textarea{
+    width:100%; border:1px solid var(--line); background:var(--card); border-radius:12px;
+    padding:11px 13px; font-size:14.5px; font-family:var(--font-body); color:var(--ink);
+    appearance:none; -webkit-appearance:none;
+  }
+  .field textarea{ min-height:70px; resize:vertical; line-height:1.5; }
+  .field input:focus, .field select:focus, .field textarea:focus{ outline:2px solid var(--gold-soft); border-color:var(--gold); }
+
+  .btn-row{ display:flex; gap:10px; margin-top:6px; }
+  .btn{
+    flex:1; padding:13px; border-radius:13px; border:none; font-size:14.5px; font-weight:600;
+    cursor:pointer; font-family:var(--font-body);
+  }
+  .btn-primary{ background:var(--ink); color:#fff; }
+  .btn-primary:active{ background:#000; }
+  .btn-ghost{ background:var(--card); color:var(--ink); border:1px solid var(--line); }
+  .btn-danger{ background:rgba(184,80,59,.12); color:var(--danger); border:1px solid rgba(184,80,59,.3); }
+
+  .detail-sheet-body p{ font-size:13.5px; color:var(--ink-soft); line-height:1.7; margin:0 0 4px; }
+  .detail-sheet-body .row{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .detail-sheet-body .row:last-of-type{ border-bottom:none; }
+  .detail-sheet-body .row .k{ color:var(--ink-faint); }
+  .detail-sheet-body .row .v{ color:var(--ink); font-weight:600; text-align:right; max-width:65%; }
+
+  .toast{
+    position:fixed; left:50%; bottom:calc(30px + var(--safe-bottom)); transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:10px 18px; border-radius:30px; font-size:13px;
+    opacity:0; pointer-events:none; transition:all .25s ease; z-index:80; white-space:nowrap;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  ::-webkit-scrollbar{ display:none; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="sheet-overlay" id="sheetOverlay">
+  <div class="sheet" id="sheetContent"></div>
+</div>
+<div class="toast" id="toast"></div>
+<input type="file" id="importInput" accept="application/json" style="display:none">
+
+<script>
+/* ================= Icons ================= */
+const ICONS = {
+  back: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`,
+  plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>`,
+  chev: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`,
+  paw: `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="9" r="2.2"/><circle cx="11" cy="6" r="2.2"/><circle cx="16.5" cy="7" r="2.2"/><circle cx="20" cy="11.5" r="2.1"/><path d="M12 12c-3.3 0-6.4 2.6-6.4 5.4 0 1.8 1.5 2.9 3.2 2.4 1.1-.3 2.1-.9 3.2-.9s2.1.6 3.2.9c1.7.5 3.2-.6 3.2-2.4 0-2.8-3.1-5.4-6.4-5.4z"/></svg>`,
+  bowl: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 9 0 0 1-9 9 9 9 0 0 1-9-9z"/><path d="M6 11c0-3 1.5-6 6-6"/><path d="M20 20l1.5 2M4 20l-1.5 2"/></svg>`,
+  walk: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h1l1 4-2 3 3 8"/><circle cx="6.3" cy="2.6" r="1.4" fill="currentColor" stroke="none"/><path d="M13 9l2 3-1 3 3 6"/><circle cx="14.5" cy="7" r="1.4" fill="currentColor" stroke="none"/><path d="M9 13l3-1"/></svg>`,
+  scale: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 5V3M9 3h6"/><path d="M12 13l3-4"/></svg>`,
+  wallet: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="16.5" cy="14" r="1"/></svg>`,
+  book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+  box: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>`,
+  note: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h13l3 3v13H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>`,
+  heart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 8.6c0 5-8.8 10.4-8.8 10.4S3.2 13.6 3.2 8.6a4.6 4.6 0 0 1 8.8-1.9 4.6 4.6 0 0 1 8.8 1.9z"/><path d="M9 9.5l1.4 2 2.2-3.2"/></svg>`,
+  clipboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>`,
+  bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>`,
+  cloud: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h11a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.5 8.5 4.5 4.5 0 0 0 7 18z"/><path d="M12 11v6M9.5 14.5L12 12l2.5 2.5"/></svg>`,
+  trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/></svg>`,
+};
+
+/* ================= Storage helpers (本地 localStorage，无需登录) ================= */
+const STORAGE_PREFIX = 'schnauzer-diary:';
+async function loadArr(key){
+  try{
+    const raw = localStorage.getItem(STORAGE_PREFIX+key);
+    if(!raw) return [];
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v : [];
+  }catch(e){ return []; }
+}
+async function saveArr(key, arr){
+  try{ localStorage.setItem(STORAGE_PREFIX+key, JSON.stringify(arr)); }catch(e){ console.error('save failed', key, e); showToast('保存失败，存储空间可能已满'); }
+}
+async function loadObj(key, fallback){
+  try{
+    const raw = localStorage.getItem(STORAGE_PREFIX+key);
+    if(!raw) return fallback;
+    return JSON.parse(raw);
+  }catch(e){ return fallback; }
+}
+async function saveObj(key, obj){
+  try{ localStorage.setItem(STORAGE_PREFIX+key, JSON.stringify(obj)); }catch(e){ console.error('save failed', key, e); }
+}
+
+/* ================= Date helpers ================= */
+function pad(n){ return String(n).padStart(2,'0'); }
+function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function nowLocal(){ const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function fmtDate(s){
+  if(!s) return '';
+  const d = new Date(s);
+  if(isNaN(d)) return s;
+  return `${d.getMonth()+1}月${d.getDate()}日`;
+}
+function fmtDateTime(s){
+  if(!s) return '';
+  const d = new Date(s);
+  if(isNaN(d)) return s;
+  return `${d.getMonth()+1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fmtDateFull(s){
+  if(!s) return '';
+  const d = new Date(s);
+  if(isNaN(d)) return s;
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+}
+function daysSince(s){
+  if(!s) return null;
+  const d = new Date(s); if(isNaN(d)) return null;
+  const diff = Math.floor((Date.now()-d.getTime())/86400000);
+  return diff;
+}
+function uid(){ return (crypto.randomUUID ? crypto.randomUUID() : 'id'+Date.now()+Math.random().toString(16).slice(2)); }
+
+/* ================= Module config ================= */
+const MODULES = {
+  feeding:{
+    label:'喂食记录', icon:ICONS.bowl, desc:'时间 · 食物 · 用量', group:'日常',
+    dateField:'datetime',
+    fields:[
+      {key:'datetime', label:'时间', type:'datetime-local', required:true, default:()=>nowLocal()},
+      {key:'food', label:'食物', type:'text', required:true, placeholder:'如：鸡肉冻干 + 主粮'},
+      {key:'amount', label:'用量', type:'text', placeholder:'如 80g / 半罐'},
+      {key:'note', label:'备注', type:'textarea', placeholder:'食欲、剩食等情况'},
+    ],
+    primary:e=>e.food,
+    secondary:e=>[e.amount, e.note].filter(Boolean).join(' · '),
+    tag:e=>fmtDateTime(e.datetime),
+    emptyText:'还没有喂食记录，点右下角 + 记一笔吧',
+  },
+  walk:{
+    label:'遛狗 / 运动', icon:ICONS.walk, desc:'时长 · 距离 · 类型', group:'日常',
+    dateField:'datetime',
+    fields:[
+      {key:'datetime', label:'时间', type:'datetime-local', required:true, default:()=>nowLocal()},
+      {key:'type', label:'类型', type:'select', options:['遛狗散步','户外玩耍','室内训练','跑步','其他']},
+      {key:'duration', label:'时长（分钟）', type:'number', placeholder:'30'},
+      {key:'distance', label:'距离（km，选填）', type:'text', placeholder:'1.2'},
+      {key:'note', label:'备注', type:'textarea', placeholder:'状态、天气等'},
+    ],
+    primary:e=>e.type||'遛狗散步',
+    secondary:e=>{
+      const parts=[];
+      if(e.duration) parts.push(e.duration+' 分钟');
+      if(e.distance) parts.push(e.distance+' km');
+      if(e.note) parts.push(e.note);
+      return parts.join(' · ');
+    },
+    tag:e=>fmtDateTime(e.datetime),
+    emptyText:'还没有遛狗记录，出门遛完回来记一下～',
+  },
+  weight:{
+    label:'体重变化', icon:ICONS.scale, desc:'体重趋势追踪', group:'日常',
+    dateField:'date',
+    fields:[
+      {key:'date', label:'日期', type:'date', required:true, default:()=>todayStr()},
+      {key:'weight', label:'体重（kg）', type:'text', required:true, placeholder:'8.2'},
+      {key:'note', label:'备注', type:'textarea', placeholder:'体况、饮食变化等'},
+    ],
+    primary:e=>`${e.weight} kg`,
+    secondary:e=>e.note||'',
+    tag:e=>fmtDate(e.date),
+    emptyText:'还没有体重记录，添加第一条开始追踪趋势',
+    summary:renderWeightSummary,
+  },
+  expense:{
+    label:'宠物开销', icon:ICONS.wallet, desc:'账单 · 分类统计', group:'生活',
+    dateField:'date',
+    fields:[
+      {key:'date', label:'日期', type:'date', required:true, default:()=>todayStr()},
+      {key:'category', label:'类别', type:'select', options:['粮食主食','零食/冻干','医疗/驱虫','洗澡美容','用品玩具','绝育/体检','其他']},
+      {key:'amount', label:'金额（¥）', type:'number', required:true, placeholder:'128'},
+      {key:'note', label:'备注', type:'textarea', placeholder:'购买渠道、商品等'},
+    ],
+    primary:e=>(e.category||'其他')+ (e.note? ' · '+e.note:''),
+    secondary:e=>'',
+    tag:e=>fmtDate(e.date),
+    pill:e=>'¥'+e.amount,
+    emptyText:'还没有开销记录，记一笔养狗账单吧',
+    summary:renderExpenseSummary,
+  },
+  recipe:{
+    label:'宠物食谱', icon:ICONS.book, desc:'自制餐 · 配方收藏', group:'生活',
+    dateField:'createdAt',
+    fields:[
+      {key:'title', label:'食谱名称', type:'text', required:true, placeholder:'如：鸡肉南瓜餐'},
+      {key:'ingredients', label:'食材', type:'textarea', placeholder:'鸡胸肉 100g、南瓜 30g、胡萝卜 20g…'},
+      {key:'steps', label:'做法', type:'textarea', placeholder:'蒸熟切碎，混合均匀…'},
+      {key:'note', label:'适口性 / 备注', type:'textarea', placeholder:'狗狗爱不爱吃、注意事项'},
+    ],
+    primary:e=>e.title,
+    secondary:e=>e.ingredients||'',
+    tag:e=>fmtDate(e.createdAt),
+    emptyText:'还没有食谱，把好用的配方收藏进来',
+  },
+  stock:{
+    label:'囤货记录', icon:ICONS.box, desc:'粮食用品库存', group:'生活',
+    dateField:'buyDate',
+    fields:[
+      {key:'name', label:'物品名称', type:'text', required:true, placeholder:'如：xx主粮 6kg'},
+      {key:'category', label:'类别', type:'select', options:['主粮','零食冻干','罐头','驱虫/保健品','洗护用品','玩具','其他']},
+      {key:'qty', label:'数量', type:'text', placeholder:'1袋 / 3盒'},
+      {key:'buyDate', label:'购买日期', type:'date', default:()=>todayStr()},
+      {key:'expiry', label:'保质期至（选填）', type:'date'},
+      {key:'note', label:'备注', type:'textarea'},
+    ],
+    primary:e=>e.name,
+    secondary:e=>[e.category, e.qty].filter(Boolean).join(' · '),
+    tag:e=>fmtDate(e.buyDate),
+    emptyText:'还没有囤货记录，添加你囤的粮食用品',
+  },
+  note:{
+    label:'记事', icon:ICONS.note, desc:'日常小记录', group:'其他',
+    dateField:'datetime',
+    fields:[
+      {key:'datetime', label:'时间', type:'datetime-local', required:true, default:()=>nowLocal()},
+      {key:'title', label:'标题', type:'text', placeholder:'如：今天很粘人'},
+      {key:'content', label:'内容', type:'textarea'},
+    ],
+    primary:e=>e.title||'记事',
+    secondary:e=>e.content||'',
+    tag:e=>fmtDateTime(e.datetime),
+    emptyText:'记录点关于它的小事吧',
+  },
+  medical:{
+    label:'病历', icon:ICONS.clipboard, desc:'就诊 · 诊断 · 用药', group:'健康',
+    dateField:'date',
+    fields:[
+      {key:'date', label:'就诊日期', type:'date', required:true, default:()=>todayStr()},
+      {key:'clinic', label:'医院 / 诊所', type:'text', placeholder:'如：xx宠物医院'},
+      {key:'diagnosis', label:'症状 / 诊断', type:'textarea', placeholder:'主诉症状、医生诊断'},
+      {key:'treatment', label:'处理 / 用药', type:'textarea', placeholder:'治疗方案、用药名称与用量'},
+      {key:'cost', label:'费用（¥，选填）', type:'number'},
+      {key:'note', label:'备注', type:'textarea'},
+    ],
+    primary:e=>e.diagnosis || '就诊记录',
+    secondary:e=>[e.clinic, e.treatment].filter(Boolean).join(' · '),
+    tag:e=>fmtDate(e.date),
+    emptyText:'还没有病历，就诊后记录下来方便复查',
+  },
+  health:{
+    label:'健康记录', icon:ICONS.heart, desc:'疫苗 · 驱虫 · 体检', group:'健康',
+    dateField:'date',
+    fields:[
+      {key:'date', label:'日期', type:'date', required:true, default:()=>todayStr()},
+      {key:'type', label:'类型', type:'select', options:['疫苗接种','体内驱虫','体外驱虫','体检','绝育','洗牙','其他']},
+      {key:'item', label:'项目名称', type:'text', placeholder:'如：狂犬疫苗 / 拜宠清'},
+      {key:'nextDate', label:'下次提醒日期（选填）', type:'date'},
+      {key:'note', label:'备注', type:'textarea'},
+    ],
+    primary:e=>e.item || e.type,
+    secondary:e=>e.type + (e.nextDate? ' · 下次：'+fmtDate(e.nextDate):''),
+    tag:e=>fmtDate(e.date),
+    emptyText:'还没有健康记录，接种或驱虫后记一笔',
+    summary:renderHealthSummary,
+  },
+};
+const GROUP_ORDER = ['日常','健康','生活','其他'];
+
+/* ================= App state ================= */
+const state = {
+  view:'home',            // 'home' | moduleKey
+  data:{},                 // moduleKey -> array
+  profile:{name:'豆豆', birthday:''},
+  editingEntry:null,
+};
+
+async function initData(){
+  for(const key of Object.keys(MODULES)){
+    state.data[key] = await loadArr(key);
+  }
+  state.profile = await loadObj('profile', {name:'豆豆', birthday:''});
+}
+
+function sortedEntries(key){
+  const cfg = MODULES[key];
+  const arr = [...state.data[key]];
+  arr.sort((a,b)=> new Date(b[cfg.dateField]||0) - new Date(a[cfg.dateField]||0));
+  return arr;
+}
+
+/* ================= Rendering ================= */
+const app = document.getElementById('app');
+
+function render(){
+  if(state.view === 'home') renderHome();
+  else renderDetail(state.view);
+}
+
+function renderHome(){
+  const feeding = sortedEntries('feeding');
+  const walk = sortedEntries('walk');
+  const weight = sortedEntries('weight');
+
+  const todayFeeds = feeding.filter(e => (e.datetime||'').slice(0,10) === todayStr()).length;
+  const lastWalkDays = walk.length ? daysSince(walk[0].datetime) : null;
+  const latestWeight = weight.length ? weight[0].weight : null;
+
+  // reminders: upcoming health nextDate within 14 days (including overdue)
+  const reminders = [];
+  state.data.health.forEach(e=>{
+    if(e.nextDate){
+      const d = daysSince(e.nextDate);
+      if(d !== null && d > -15){ // show if due within ~15 days ahead or recently passed
+        reminders.push({item:e.item||e.type, date:e.nextDate, overdue: d>=0});
+      }
+    }
+  });
+  reminders.sort((a,b)=> new Date(a.date) - new Date(b.date));
+  const topReminder = reminders.find(r=>true);
+
+  let html = `
+    <div class="topbar">
+      <div class="tb-spacer"></div>
+      <div class="tb-title">雪纳瑞日记</div>
+      <div class="tb-btn" onclick="openBackupSheet()">${ICONS.cloud}</div>
+    </div>
+    <div class="home-header">
+      <div class="tag-badge" onclick="openProfileEdit()">
+        <div class="tag-hole"></div>
+        ${ICONS.paw.replace('currentColor','var(--gold-soft)')}
+      </div>
+      <p class="pet-name" onclick="openProfileEdit()">${escapeHtml(state.profile.name || '狗狗')}</p>
+      <p class="pet-sub">黑银迷你雪纳瑞</p>
+      <div class="stat-row">
+        <div class="stat-chip"><div class="v">${todayFeeds}</div><div class="l">今日喂食</div></div>
+        <div class="stat-chip"><div class="v">${lastWalkDays===null? '—' : (lastWalkDays===0? '今天':lastWalkDays+'天前')}</div><div class="l">最近遛狗</div></div>
+        <div class="stat-chip"><div class="v">${latestWeight? latestWeight : '—'}</div><div class="l">体重 kg</div></div>
+      </div>
+    </div>
+  `;
+
+  if(topReminder){
+    html += `
+      <div class="reminder-strip">
+        ${ICONS.bell}
+        <div>${topReminder.overdue?'已到期提醒':'即将提醒'}：<b>${escapeHtml(topReminder.item)}</b> · ${fmtDateFull(topReminder.date)}</div>
+      </div>
+    `;
+  }
+
+  GROUP_ORDER.forEach(group=>{
+    const keys = Object.keys(MODULES).filter(k=>MODULES[k].group===group);
+    if(!keys.length) return;
+    html += `<div class="group"><div class="group-label">${group}</div><div class="group-card">`;
+    keys.forEach(k=>{
+      const cfg = MODULES[k];
+      const count = state.data[k].length;
+      html += `
+        <div class="mod-row" onclick="goTo('${k}')">
+          <div class="mod-icon">${cfg.icon}</div>
+          <div class="mod-text"><div class="t">${cfg.label}</div><div class="d">${cfg.desc}</div></div>
+          <div class="mod-count">${count}</div>
+          <div class="chev">${ICONS.chev}</div>
+        </div>
+      `;
+    });
+    html += `</div></div>`;
+  });
+
+  html += `<div class="bottom-pad"></div>`;
+  app.innerHTML = html;
+}
+
+function renderDetail(key){
+  const cfg = MODULES[key];
+  const entries = sortedEntries(key);
+  let html = `
+    <div class="topbar solid">
+      <div class="tb-btn" onclick="goHome()">${ICONS.back}</div>
+      <div class="tb-title">${cfg.label}</div>
+      <div class="tb-spacer"></div>
+    </div>
+    <div class="detail-body">
+  `;
+
+  if(cfg.summary){
+    html += cfg.summary(entries);
+  }
+
+  if(!entries.length){
+    html += `
+      <div class="empty-state">
+        ${ICONS.paw}
+        <p><b>还没有记录</b><br>${cfg.emptyText}</p>
+      </div>
+    `;
+  }else{
+    entries.forEach(e=>{
+      const primary = escapeHtml(cfg.primary(e) || '');
+      const secondary = escapeHtml(cfg.secondary ? cfg.secondary(e) : '');
+      const tag = cfg.tag ? cfg.tag(e) : '';
+      html += `
+        <div class="entry-card" onclick="openEntryDetail('${key}','${e.id}')">
+          <div class="entry-main">
+            <div class="t">${primary}</div>
+            ${secondary? `<div class="s">${secondary}</div>`:''}
+          </div>
+          <div class="entry-side">
+            <div class="d">${tag}</div>
+            ${cfg.pill? `<div class="tag">${escapeHtml(cfg.pill(e))}</div>` : ''}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  html += `</div><button class="fab" onclick="openForm('${key}')">${ICONS.plus}</button>`;
+  app.innerHTML = html;
+}
+
+function escapeHtml(str){
+  if(str===undefined||str===null) return '';
+  return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---- Weight summary ---- */
+function renderWeightSummary(entries){
+  if(!entries.length) return '';
+  const asc = [...entries].sort((a,b)=> new Date(a.date)-new Date(b.date));
+  const latest = parseFloat(asc[asc.length-1].weight);
+  const prev = asc.length>1 ? parseFloat(asc[asc.length-2].weight) : null;
+  let deltaHtml = '';
+  if(prev !== null && !isNaN(latest) && !isNaN(prev)){
+    const diff = +(latest-prev).toFixed(2);
+    const cls = diff>0?'up':diff<0?'down':'flat';
+    const sign = diff>0?'+':'';
+    deltaHtml = `<span class="delta ${cls}">${sign}${diff} kg 较上次</span>`;
+  }
+  // build sparkline
+  const vals = asc.map(e=>parseFloat(e.weight)).filter(v=>!isNaN(v));
+  let svg = '';
+  if(vals.length>1){
+    const w=300,h=90,pad=8;
+    const min=Math.min(...vals), max=Math.max(...vals);
+    const range = (max-min)||1;
+    const pts = vals.map((v,i)=>{
+      const x = pad + (i*(w-pad*2)/(vals.length-1));
+      const y = h-pad - ((v-min)/range)*(h-pad*2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    const dots = vals.map((v,i)=>{
+      const x = pad + (i*(w-pad*2)/(vals.length-1));
+      const y = h-pad - ((v-min)/range)*(h-pad*2);
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.6" fill="#c8933f"/>`;
+    }).join('');
+    svg = `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:90px;margin-top:6px;">
+      <polyline points="${pts.join(' ')}" fill="none" stroke="#c8933f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      ${dots}
+    </svg>`;
+  }
+  return `
+    <div class="summary-card">
+      <div><span class="big">${isNaN(latest)?'—':latest}</span><span class="unit">kg</span></div>
+      <div class="cap">当前体重 · 共 ${entries.length} 条记录</div>
+      ${deltaHtml}
+      <div class="chart-wrap">${svg}</div>
+    </div>
+  `;
+}
+
+/* ---- Expense summary ---- */
+function renderExpenseSummary(entries){
+  if(!entries.length) return '';
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${pad(now.getMonth()+1)}`;
+  const monthEntries = entries.filter(e=> (e.date||'').slice(0,7)===ym);
+  const monthTotal = monthEntries.reduce((s,e)=> s+ (parseFloat(e.amount)||0), 0);
+  const totalsByCat = {};
+  entries.forEach(e=>{
+    const c = e.category||'其他';
+    totalsByCat[c] = (totalsByCat[c]||0) + (parseFloat(e.amount)||0);
+  });
+  const maxVal = Math.max(...Object.values(totalsByCat), 1);
+  const cats = Object.entries(totalsByCat).sort((a,b)=>b[1]-a[1]);
+  let bars = cats.map(([cat,val])=>`
+    <div class="bar-row">
+      <div class="bl">${escapeHtml(cat)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(val/maxVal*100).toFixed(0)}%"></div></div>
+      <div class="bv">¥${val.toFixed(0)}</div>
+    </div>
+  `).join('');
+  return `
+    <div class="summary-card">
+      <div><span class="big">¥${monthTotal.toFixed(0)}</span></div>
+      <div class="cap">本月支出 · 累计 ¥${entries.reduce((s,e)=>s+(parseFloat(e.amount)||0),0).toFixed(0)}</div>
+      <div class="chart-wrap">${bars}</div>
+    </div>
+  `;
+}
+
+/* ---- Health summary ---- */
+function renderHealthSummary(entries){
+  const withNext = entries.filter(e=>e.nextDate).sort((a,b)=> new Date(a.nextDate)-new Date(b.nextDate));
+  if(!withNext.length) return '';
+  const rows = withNext.slice(0,4).map(e=>{
+    const d = daysSince(e.nextDate);
+    const overdue = d!==null && d>=0;
+    return `<div class="bar-row" style="align-items:center;">
+      <div class="bl" style="width:auto;flex:1;color:${overdue?'#e19c8c':'var(--silver)'}">${escapeHtml(e.item||e.type)}</div>
+      <div class="bv" style="width:auto;color:#fff;">${fmtDate(e.nextDate)}</div>
+    </div>`;
+  }).join('');
+  return `
+    <div class="summary-card">
+      <div class="cap" style="margin-top:0;">提醒事项</div>
+      <div class="chart-wrap">${rows}</div>
+    </div>
+  `;
+}
+
+/* ================= Navigation ================= */
+function goTo(key){ state.view = key; window.scrollTo(0,0); render(); }
+function goHome(){ state.view = 'home'; window.scrollTo(0,0); render(); }
+
+/* ================= Sheet (modal) ================= */
+const overlay = document.getElementById('sheetOverlay');
+const sheetContent = document.getElementById('sheetContent');
+
+function closeSheet(){
+  overlay.classList.remove('open');
+  setTimeout(()=>{ sheetContent.innerHTML=''; }, 220);
+}
+overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeSheet(); });
+
+function openForm(key, entry=null){
+  const cfg = MODULES[key];
+  const isEdit = !!entry;
+  let fieldsHtml = cfg.fields.map(f=>{
+    const val = entry ? (entry[f.key]||'') : (f.default? f.default(): '');
+    if(f.type==='textarea'){
+      return `<div class="field"><label>${f.label}</label><textarea id="f_${f.key}" placeholder="${f.placeholder||''}">${escapeHtml(val)}</textarea></div>`;
+    }else if(f.type==='select'){
+      const opts = f.options.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('');
+      return `<div class="field"><label>${f.label}</label><select id="f_${f.key}">${opts}</select></div>`;
+    }else{
+      return `<div class="field"><label>${f.label}</label><input id="f_${f.key}" type="${f.type}" placeholder="${f.placeholder||''}" value="${escapeHtml(val)}"></div>`;
+    }
+  }).join('');
+
+  sheetContent.innerHTML = `
+    <div class="sheet-grip"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">${isEdit? '编辑记录':'新增'+cfg.label}</div>
+      <div class="sheet-close" onclick="closeSheet()">取消</div>
+    </div>
+    ${fieldsHtml}
+    <div class="btn-row">
+      ${isEdit? `<button class="btn btn-danger" onclick="deleteEntry('${key}','${entry.id}')">删除</button>`:''}
+      <button class="btn btn-primary" onclick="saveEntry('${key}'${isEdit? `,'${entry.id}'`:''})">保存</button>
+    </div>
+  `;
+  overlay.classList.add('open');
+}
+
+function saveEntry(key, id=null){
+  const cfg = MODULES[key];
+  const obj = id ? {...state.data[key].find(e=>e.id===id)} : {id: uid()};
+  let missingRequired = false;
+  cfg.fields.forEach(f=>{
+    const el = document.getElementById('f_'+f.key);
+    const v = el ? el.value.trim() : '';
+    if(f.required && !v) missingRequired = true;
+    obj[f.key] = v;
+  });
+  if(missingRequired){ showToast('请填写必填项'); return; }
+  if(id){
+    const idx = state.data[key].findIndex(e=>e.id===id);
+    state.data[key][idx] = obj;
+  }else{
+    state.data[key].push(obj);
+  }
+  saveArr(key, state.data[key]);
+  closeSheet();
+  render();
+  showToast(id? '已更新':'已保存');
+}
+
+function deleteEntry(key, id){
+  state.data[key] = state.data[key].filter(e=>e.id!==id);
+  saveArr(key, state.data[key]);
+  closeSheet();
+  render();
+  showToast('已删除');
+}
+
+function openEntryDetail(key, id){
+  const cfg = MODULES[key];
+  const entry = state.data[key].find(e=>e.id===id);
+  if(!entry) return;
+  let rows = cfg.fields.map(f=>{
+    const v = entry[f.key];
+    if(!v) return '';
+    return `<div class="row"><div class="k">${f.label}</div><div class="v">${escapeHtml(v)}</div></div>`;
+  }).join('');
+  sheetContent.innerHTML = `
+    <div class="sheet-grip"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">详情</div>
+      <div class="sheet-close" onclick="closeSheet()">关闭</div>
+    </div>
+    <div class="detail-sheet-body">${rows}</div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-ghost" onclick="openForm('${key}', state.data['${key}'].find(e=>e.id==='${id}'))">编辑</button>
+      <button class="btn btn-danger" onclick="deleteEntry('${key}','${id}')">删除</button>
+    </div>
+  `;
+  overlay.classList.add('open');
+}
+
+/* ---- Profile edit ---- */
+function openProfileEdit(){
+  sheetContent.innerHTML = `
+    <div class="sheet-grip"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">狗狗信息</div>
+      <div class="sheet-close" onclick="closeSheet()">取消</div>
+    </div>
+    <div class="field"><label>名字</label><input id="p_name" type="text" value="${escapeHtml(state.profile.name||'')}"></div>
+    <div class="field"><label>生日（选填）</label><input id="p_birthday" type="date" value="${escapeHtml(state.profile.birthday||'')}"></div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="saveProfile()">保存</button></div>
+  `;
+  overlay.classList.add('open');
+}
+function saveProfile(){
+  state.profile.name = document.getElementById('p_name').value.trim() || '狗狗';
+  state.profile.birthday = document.getElementById('p_birthday').value;
+  saveObj('profile', state.profile);
+  closeSheet();
+  render();
+  showToast('已保存');
+}
+
+/* ---- Backup / restore ---- */
+function openBackupSheet(){
+  const total = Object.values(state.data).reduce((s,arr)=>s+arr.length,0);
+  sheetContent.innerHTML = `
+    <div class="sheet-grip"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">备份与恢复</div>
+      <div class="sheet-close" onclick="closeSheet()">关闭</div>
+    </div>
+    <p style="font-size:12.5px;color:var(--ink-soft);line-height:1.7;margin:0 0 16px;">
+      所有记录都只保存在这台设备的浏览器里，不会自动同步。建议定期导出备份文件存到 iCloud / 文件 App，换设备或清除数据后可以导入恢复。当前共 <b style="color:var(--ink)">${total}</b> 条记录。
+    </p>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="document.getElementById('importInput').click()">导入备份</button>
+      <button class="btn btn-primary" onclick="exportBackup()">导出备份</button>
+    </div>
+  `;
+  overlay.classList.add('open');
+}
+
+function exportBackup(){
+  const payload = { exportedAt:new Date().toISOString(), profile:state.profile, data:state.data };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date();
+  a.href = url;
+  a.download = `雪纳瑞日记备份_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  showToast('已导出备份');
+}
+
+document.getElementById('importInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(evt){
+    try{
+      const payload = JSON.parse(evt.target.result);
+      if(!payload || typeof payload.data !== 'object') throw new Error('格式不正确');
+      for(const key of Object.keys(MODULES)){
+        if(Array.isArray(payload.data[key])){
+          state.data[key] = payload.data[key];
+          await saveArr(key, state.data[key]);
+        }
+      }
+      if(payload.profile){
+        state.profile = payload.profile;
+        await saveObj('profile', state.profile);
+      }
+      closeSheet();
+      goHome();
+      showToast('导入成功');
+    }catch(err){
+      showToast('导入失败，文件格式不正确');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+/* ---- Toast ---- */
+let toastTimer=null;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), 1600);
+}
+
+/* ================= Boot ================= */
+(async function boot(){
+  app.innerHTML = `<div style="padding:60px 20px;text-align:center;color:var(--ink-faint);font-size:13px;">加载中…</div>`;
+  await initData();
+  render();
+})();
+</script>
+</body>
+</html>
