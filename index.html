@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="雪纳瑞日记">
+<meta name="apple-mobile-web-app-title" content="宠物日记">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#17181c">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<title>雪纳瑞日记</title>
+<title>宠物日记</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -118,6 +118,11 @@
     box-shadow:0 6px 16px rgba(23,24,28,.25);
     position:relative; overflow:hidden;
   }
+  .tag-badge.sm{ width:60px; height:60px; margin:0; border-width:2px; }
+  .tag-badge.add{
+    background:var(--card); border:2px dashed var(--line); color:var(--ink-faint);
+    box-shadow:none;
+  }
   .tag-badge img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
   .avatar-edit-badge{
     position:absolute; bottom:8px; right:calc(50% - 39px - 4px);
@@ -127,18 +132,23 @@
   }
   .avatar-edit-badge svg{ width:12px; height:12px; }
   .tag-badge svg{width:38px; height:38px;}
-  .tag-hole{
-    position:absolute; top:-6px; left:50%; transform:translateX(-50%);
-    width:10px; height:10px; border-radius:50%;
-    background:var(--pearl); border:2px solid var(--gold);
+  .tag-badge.sm svg{ width:28px; height:28px; }
+  .pets-row{
+    display:flex; align-items:flex-start; justify-content:center; flex-wrap:wrap;
+    gap:16px; margin:4px 0 16px;
+  }
+  .pet-mini{ display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+  .pet-mini-name{
+    font-size:11.5px; color:var(--ink-soft); margin-top:7px; max-width:72px;
+    text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
   .pet-name{
     font-family:var(--font-display); font-size:26px; font-weight:600;
-    text-align:center; color:var(--ink); margin:0 0 2px;
+    text-align:center; color:var(--ink); margin:0 0 2px; cursor:pointer;
   }
   .pet-sub{
     text-align:center; color:var(--ink-soft); font-size:13px; margin:0;
-    letter-spacing:.3px;
+    letter-spacing:.3px; cursor:pointer;
   }
   .stat-row{
     display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
@@ -332,6 +342,7 @@ const ICONS = {
   camera: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>`,
   pin: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.5 7-11.5A7 7 0 0 0 5 9.5C5 14.5 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>`,
   trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/></svg>`,
+  potty: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="10" rx="2.5"/><path d="M3.5 9c0-3.3 2.3-5.5 5.5-5.5h6c3.2 0 5.5 2.2 5.5 5.5"/><path d="M9 14.2h.01M15 14.2h.01"/></svg>`,
 };
 
 /* ================= Storage helpers (本地 localStorage，无需登录) ================= */
@@ -386,11 +397,43 @@ function daysSince(s){
   const diff = Math.floor((Date.now()-d.getTime())/86400000);
   return diff;
 }
+function computeAge(birthday){
+  if(!birthday) return '';
+  const b = new Date(birthday+'T00:00:00');
+  if(isNaN(b)) return '';
+  const now = new Date();
+  if(b > now) return '';
+  let years = now.getFullYear() - b.getFullYear();
+  let months = now.getMonth() - b.getMonth();
+  let days = now.getDate() - b.getDate();
+  if(days < 0){
+    months -= 1;
+    const prevMonthLastDay = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    days += prevMonthLastDay;
+  }
+  if(months < 0){
+    years -= 1;
+    months += 12;
+  }
+  const parts = [];
+  if(years>0) parts.push(years+'岁');
+  if(months>0 || years>0) parts.push(months+'个月');
+  parts.push(days+'天');
+  return parts.join('');
+}
 function uid(){ return (crypto.randomUUID ? crypto.randomUUID() : 'id'+Date.now()+Math.random().toString(16).slice(2)); }
 
 /* ================= Module config ================= */
-const MODULES = {
-  feeding:{
+let MODULES = {};
+let PET_SCOPED = [];
+let ACTIVITY_KEY = 'walk';
+
+function buildModules(){
+  const isCat = state.settings.species === 'cat';
+  ACTIVITY_KEY = isCat ? 'play' : 'walk';
+  const m = {};
+
+  m.feeding = {
     label:'喂食记录', icon:ICONS.bowl, desc:'时间 · 食物 · 用量', group:'日常',
     dateField:'datetime',
     fields:[
@@ -403,8 +446,27 @@ const MODULES = {
     secondary:e=>[e.amount, e.note].filter(Boolean).join(' · '),
     tag:e=>fmtDateTime(e.datetime),
     emptyText:'还没有喂食记录，点右下角 + 记一笔吧',
-  },
-  walk:{
+  };
+
+  m[ACTIVITY_KEY] = isCat ? {
+    label:'玩耍 / 互动', icon:ICONS.walk, desc:'时长 · 类型', group:'日常',
+    dateField:'datetime',
+    fields:[
+      {key:'datetime', label:'时间', type:'datetime-local', required:true, default:()=>nowLocal()},
+      {key:'type', label:'类型', type:'select', options:['逗猫玩具','自由活动','窗边观察','户外散放（牵引）','其他']},
+      {key:'duration', label:'时长（分钟）', type:'number', placeholder:'15'},
+      {key:'note', label:'备注', type:'textarea', placeholder:'兴奋程度、状态等'},
+    ],
+    primary:e=>e.type||'玩耍互动',
+    secondary:e=>{
+      const parts=[];
+      if(e.duration) parts.push(e.duration+' 分钟');
+      if(e.note) parts.push(e.note);
+      return parts.join(' · ');
+    },
+    tag:e=>fmtDateTime(e.datetime),
+    emptyText:'还没有玩耍记录，陪它玩完回来记一下～',
+  } : {
     label:'遛狗 / 运动', icon:ICONS.walk, desc:'时长 · 距离 · 类型', group:'日常',
     dateField:'datetime',
     fields:[
@@ -424,8 +486,9 @@ const MODULES = {
     },
     tag:e=>fmtDateTime(e.datetime),
     emptyText:'还没有遛狗记录，出门遛完回来记一下～',
-  },
-  weight:{
+  };
+
+  m.weight = {
     label:'体重变化', icon:ICONS.scale, desc:'体重趋势追踪', group:'日常',
     dateField:'date',
     fields:[
@@ -438,8 +501,26 @@ const MODULES = {
     tag:e=>fmtDate(e.date),
     emptyText:'还没有体重记录，添加第一条开始追踪趋势',
     summary:renderWeightSummary,
-  },
-  expense:{
+  };
+
+  if(isCat){
+    m.potty = {
+      label:'如厕记录', icon:ICONS.potty, desc:'排泄 · 呕吐观察', group:'日常',
+      dateField:'datetime',
+      fields:[
+        {key:'datetime', label:'时间', type:'datetime-local', required:true, default:()=>nowLocal()},
+        {key:'type', label:'类型', type:'select', options:['小便','大便','呕吐','其他']},
+        {key:'consistency', label:'性状（选填）', type:'select', options:['未记录','正常','偏软','腹泻','带血','其他']},
+        {key:'note', label:'备注', type:'textarea', placeholder:'猫砂盆情况、频率变化等'},
+      ],
+      primary:e=>e.type||'如厕',
+      secondary:e=>[e.consistency&&e.consistency!=='未记录'?e.consistency:'', e.note].filter(Boolean).join(' · '),
+      tag:e=>fmtDateTime(e.datetime),
+      emptyText:'还没有如厕记录，方便观察健康状况',
+    };
+  }
+
+  m.expense = {
     label:'宠物开销', icon:ICONS.wallet, desc:'账单 · 分类统计', group:'生活',
     dateField:'date',
     fields:[
@@ -452,29 +533,33 @@ const MODULES = {
     secondary:e=>'',
     tag:e=>fmtDate(e.date),
     pill:e=>'¥'+e.amount,
-    emptyText:'还没有开销记录，记一笔养狗账单吧',
+    emptyText:'还没有开销记录，记一笔账单吧',
     summary:renderExpenseSummary,
-  },
-  recipe:{
+  };
+
+  m.recipe = {
     label:'宠物食谱', icon:ICONS.book, desc:'自制餐 · 配方收藏', group:'生活',
     dateField:'createdAt',
     fields:[
       {key:'title', label:'食谱名称', type:'text', required:true, placeholder:'如：鸡肉南瓜餐'},
       {key:'ingredients', label:'食材', type:'textarea', placeholder:'鸡胸肉 100g、南瓜 30g、胡萝卜 20g…'},
       {key:'steps', label:'做法', type:'textarea', placeholder:'蒸熟切碎，混合均匀…'},
-      {key:'note', label:'适口性 / 备注', type:'textarea', placeholder:'狗狗爱不爱吃、注意事项'},
+      {key:'note', label:'适口性 / 备注', type:'textarea', placeholder:'爱不爱吃、注意事项'},
     ],
     primary:e=>e.title,
     secondary:e=>e.ingredients||'',
     tag:e=>fmtDate(e.createdAt),
     emptyText:'还没有食谱，把好用的配方收藏进来',
-  },
-  stock:{
+  };
+
+  m.stock = {
     label:'囤货记录', icon:ICONS.box, desc:'粮食用品库存', group:'生活',
     dateField:'buyDate',
     fields:[
       {key:'name', label:'物品名称', type:'text', required:true, placeholder:'如：xx主粮 6kg'},
-      {key:'category', label:'类别', type:'select', options:['主粮','零食冻干','罐头','驱虫/保健品','洗护用品','玩具','其他']},
+      {key:'category', label:'类别', type:'select', options: isCat
+        ? ['主粮','零食冻干','罐头','猫砂','驱虫/保健品','洗护用品','玩具','其他']
+        : ['主粮','零食冻干','罐头','驱虫/保健品','洗护用品','玩具','其他']},
       {key:'qty', label:'数量', type:'text', placeholder:'1袋 / 3盒'},
       {key:'buyDate', label:'购买日期', type:'date', default:()=>todayStr()},
       {key:'expiry', label:'保质期至（选填）', type:'date'},
@@ -484,8 +569,9 @@ const MODULES = {
     secondary:e=>[e.category, e.qty].filter(Boolean).join(' · '),
     tag:e=>fmtDate(e.buyDate),
     emptyText:'还没有囤货记录，添加你囤的粮食用品',
-  },
-  note:{
+  };
+
+  m.note = {
     label:'记事', icon:ICONS.note, desc:'日常小记录', group:'其他',
     dateField:'datetime',
     fields:[
@@ -497,8 +583,9 @@ const MODULES = {
     secondary:e=>e.content||'',
     tag:e=>fmtDateTime(e.datetime),
     emptyText:'记录点关于它的小事吧',
-  },
-  medical:{
+  };
+
+  m.medical = {
     label:'病历', icon:ICONS.clipboard, desc:'就诊 · 诊断 · 用药', group:'健康',
     dateField:'date',
     fields:[
@@ -513,14 +600,15 @@ const MODULES = {
     secondary:e=>[e.clinic, e.treatment].filter(Boolean).join(' · '),
     tag:e=>fmtDate(e.date),
     emptyText:'还没有病历，就诊后记录下来方便复查',
-  },
-  health:{
+  };
+
+  m.health = {
     label:'健康记录', icon:ICONS.heart, desc:'疫苗 · 驱虫 · 体检', group:'健康',
     dateField:'date',
     fields:[
       {key:'date', label:'日期', type:'date', required:true, default:()=>todayStr()},
       {key:'type', label:'类型', type:'select', options:['疫苗接种','体内驱虫','体外驱虫','体检','绝育','洗牙','其他']},
-      {key:'item', label:'项目名称', type:'text', placeholder:'如：狂犬疫苗 / 拜宠清'},
+      {key:'item', label:'项目名称', type:'text', placeholder: isCat? '如：猫三联疫苗 / 体内驱虫药':'如：狂犬疫苗 / 拜宠清'},
       {key:'nextDate', label:'下次提醒日期（选填）', type:'date'},
       {key:'note', label:'备注', type:'textarea'},
     ],
@@ -529,23 +617,63 @@ const MODULES = {
     tag:e=>fmtDate(e.date),
     emptyText:'还没有健康记录，接种或驱虫后记一笔',
     summary:renderHealthSummary,
-  },
-};
+  };
+
+  MODULES = m;
+  PET_SCOPED = isCat
+    ? ['feeding','play','weight','potty','medical','health']
+    : ['feeding','walk','weight','medical','health'];
+}
+
 const GROUP_ORDER = ['日常','健康','生活','其他'];
 
 /* ================= App state ================= */
 const state = {
   view:'home',            // 'home' | moduleKey
   data:{},                 // moduleKey -> array
-  profile:{name:'豆豆', birthday:''},
+  pets:[],                 // {id,name,species,breed,avatar}
+  settings:{appTitle:'', species:null},
   editingEntry:null,
 };
 
-async function initData(){
+function petById(id){ return state.pets.find(p=>p.id===id); }
+
+function getFields(key){
+  const cfg = MODULES[key];
+  if(PET_SCOPED.includes(key) && state.pets.length>1){
+    return [{key:'petId', label:'宠物', type:'petselect', required:true}, ...cfg.fields];
+  }
+  return cfg.fields;
+}
+
+async function loadModuleData(){
   for(const key of Object.keys(MODULES)){
     state.data[key] = await loadArr(key);
   }
-  state.profile = await loadObj('profile', {name:'豆豆', birthday:''});
+}
+
+async function initData(){
+  state.settings = await loadObj('settings', {appTitle:'', species:null});
+
+  let pets = await loadObj('pets', null);
+  if(!pets){
+    // migrate from the old single-pet "profile" key if present
+    const oldProfile = await loadObj('profile', null);
+    if(oldProfile && (oldProfile.name || oldProfile.avatar)){
+      pets = [{id:uid(), name:oldProfile.name||'', species:'dog', breed:'', avatar:oldProfile.avatar||''}];
+      if(!state.settings.species){
+        state.settings.species = 'dog'; // existing users already have dog-oriented data
+        await saveObj('settings', state.settings);
+      }
+    }else{
+      pets = [];
+    }
+    await saveObj('pets', pets);
+  }
+  state.pets = pets;
+
+  buildModules(); // safe default fallback ('dog') used for initial key set if species unset yet
+  await loadModuleData();
 }
 
 function sortedEntries(key){
@@ -559,50 +687,100 @@ function sortedEntries(key){
 const app = document.getElementById('appContent');
 
 function render(){
+  document.title = state.settings.appTitle || '宠物日记';
   if(state.view === 'home') renderHome();
   else renderDetail(state.view);
 }
 
 function renderHome(){
   const feeding = sortedEntries('feeding');
-  const walk = sortedEntries('walk');
+  const walk = sortedEntries(ACTIVITY_KEY);
   const weight = sortedEntries('weight');
 
   const todayFeeds = feeding.filter(e => (e.datetime||'').slice(0,10) === todayStr()).length;
   const lastWalkDays = walk.length ? daysSince(walk[0].datetime) : null;
   const latestWeight = weight.length ? weight[0].weight : null;
 
-  // reminders: upcoming health nextDate within 14 days (including overdue)
-  const reminders = [];
+  // reminders: only the most recent entry per (pet, type) counts — an older
+  // entry's nextDate is considered superseded once a newer entry of the same
+  // type has been logged (e.g. 第二针 supersedes 第一针's "next shot" reminder).
+  const latestByGroup = {};
   state.data.health.forEach(e=>{
+    const gKey = (e.petId||'') + '|' + (e.type||'');
+    const cur = latestByGroup[gKey];
+    if(!cur || new Date(e.date||0) >= new Date(cur.date||0)){
+      latestByGroup[gKey] = e;
+    }
+  });
+  const reminders = [];
+  Object.values(latestByGroup).forEach(e=>{
     if(e.nextDate){
       const d = daysSince(e.nextDate);
-      if(d !== null && d > -15){ // show if due within ~15 days ahead or recently passed
-        reminders.push({item:e.item||e.type, date:e.nextDate, overdue: d>=0});
+      if(d !== null && d > -15){
+        const pet = state.pets.length>1 ? petById(e.petId) : null;
+        reminders.push({item:e.item||e.type, date:e.nextDate, overdue: d>=0, petName: pet? pet.name : ''});
       }
     }
   });
   reminders.sort((a,b)=> new Date(a.date) - new Date(b.date));
   const topReminder = reminders.find(r=>true);
 
+  // header: avatar area
+  let headerHtml = '';
+  if(state.pets.length<=1){
+    const pet = state.pets[0] || null;
+    const avatarInner = pet && pet.avatar
+      ? `<img src="${pet.avatar}" alt="头像">`
+      : ICONS.paw.replace('currentColor','var(--gold-soft)');
+    const showCam = !(pet && pet.avatar);
+    const editArg = pet ? `'${pet.id}'` : 'null';
+    const ageText = pet && pet.birthday ? computeAge(pet.birthday) : '';
+    headerHtml = `
+      <div class="tag-badge" onclick="openPetEdit(${editArg})">
+        ${avatarInner}
+        ${showCam? `<div class="avatar-edit-badge">${ICONS.camera}</div>`:''}
+      </div>
+      <p class="pet-name" onclick="openPetEdit(${editArg})">${pet && pet.name ? escapeHtml(pet.name) : '<span style="color:var(--ink-faint)">宠物昵称</span>'}</p>
+      <p class="pet-sub" onclick="openPetEdit(${editArg})">${pet && pet.breed ? escapeHtml(pet.breed) : '<span style="color:var(--ink-faint)">点击填写品种 / 简介</span>'}</p>
+      ${ageText? `<div style="text-align:center; margin-top:7px;"><span style="display:inline-block; font-family:var(--font-mono); font-size:11.5px; color:var(--ink-soft); background:var(--card); border:1px solid var(--line); border-radius:20px; padding:4px 13px;">${escapeHtml(ageText)}</span></div>` : ''}
+    `;
+  }else{
+    const cards = state.pets.map(p=>{
+      const inner = p.avatar ? `<img src="${p.avatar}" alt="头像">` : ICONS.paw.replace('currentColor','var(--gold-soft)');
+      return `
+        <div class="pet-mini" onclick="openPetEdit('${p.id}')">
+          <div class="tag-badge sm">${inner}</div>
+          <div class="pet-mini-name">${escapeHtml(p.name||'未命名')}</div>
+        </div>
+      `;
+    }).join('');
+    headerHtml = `
+      <div class="pets-row">
+        ${cards}
+        <div class="pet-mini" onclick="openPetEdit(null)">
+          <div class="tag-badge sm add">${ICONS.plus}</div>
+          <div class="pet-mini-name">添加</div>
+        </div>
+      </div>
+    `;
+  }
+
+  const thirdStat = state.pets.length<=1
+    ? {v: latestWeight? latestWeight : '—', l:'体重 kg'}
+    : {v: state.pets.length, l:'家庭宠物'};
+
   let html = `
     <div class="topbar">
       <a class="tb-btn" href="findmy://items" style="text-decoration:none; color:inherit;" title="打开查找App">${ICONS.pin}</a>
-      <div class="tb-title">雪纳瑞日记</div>
+      <div class="tb-title" onclick="openTitleEdit()">${escapeHtml(state.settings.appTitle || '宠物日记')}</div>
       <div class="tb-btn" onclick="openBackupSheet()">${ICONS.cloud}</div>
     </div>
     <div class="home-header">
-      <div class="tag-badge" onclick="openProfileEdit()">
-        <div class="tag-hole"></div>
-        ${state.profile.avatar ? `<img src="${state.profile.avatar}" alt="头像">` : ICONS.paw.replace('currentColor','var(--gold-soft)')}
-        ${state.profile.avatar ? '' : `<div class="avatar-edit-badge">${ICONS.camera}</div>`}
-      </div>
-      <p class="pet-name" onclick="openProfileEdit()">${escapeHtml(state.profile.name || '狗狗')}</p>
-      <p class="pet-sub">黑银迷你雪纳瑞</p>
+      ${headerHtml}
       <div class="stat-row">
         <div class="stat-chip"><div class="v">${todayFeeds}</div><div class="l">今日喂食</div></div>
-        <div class="stat-chip"><div class="v">${lastWalkDays===null? '—' : (lastWalkDays===0? '今天':lastWalkDays+'天前')}</div><div class="l">最近遛狗</div></div>
-        <div class="stat-chip"><div class="v">${latestWeight? latestWeight : '—'}</div><div class="l">体重 kg</div></div>
+        <div class="stat-chip"><div class="v">${lastWalkDays===null? '—' : (lastWalkDays===0? '今天':lastWalkDays+'天前')}</div><div class="l">最近运动</div></div>
+        <div class="stat-chip"><div class="v">${thirdStat.v}</div><div class="l">${thirdStat.l}</div></div>
       </div>
     </div>
   `;
@@ -611,7 +789,7 @@ function renderHome(){
     html += `
       <div class="reminder-strip">
         ${ICONS.bell}
-        <div>${topReminder.overdue?'已到期提醒':'即将提醒'}：<b>${escapeHtml(topReminder.item)}</b> · ${fmtDateFull(topReminder.date)}</div>
+        <div>${topReminder.overdue?'已到期提醒':'即将提醒'}：<b>${topReminder.petName? escapeHtml(topReminder.petName)+' · ':''}${escapeHtml(topReminder.item)}</b> · ${fmtDateFull(topReminder.date)}</div>
       </div>
     `;
   }
@@ -663,10 +841,12 @@ function renderDetail(key){
       </div>
     `;
   }else{
+    const showPetTag = PET_SCOPED.includes(key) && state.pets.length>1;
     entries.forEach(e=>{
       const primary = escapeHtml(cfg.primary(e) || '');
       const secondary = escapeHtml(cfg.secondary ? cfg.secondary(e) : '');
       const tag = cfg.tag ? cfg.tag(e) : '';
+      const petTag = showPetTag ? (petById(e.petId)?.name || '未分配') : '';
       html += `
         <div class="entry-card" onclick="openEntryDetail('${key}','${e.id}')">
           <div class="entry-main">
@@ -676,6 +856,7 @@ function renderDetail(key){
           <div class="entry-side">
             <div class="d">${tag}</div>
             ${cfg.pill? `<div class="tag">${escapeHtml(cfg.pill(e))}</div>` : ''}
+            ${petTag? `<div class="tag" style="margin-top:4px;">${escapeHtml(petTag)}</div>` : ''}
           </div>
         </div>
       `;
@@ -800,10 +981,40 @@ function closeSheet(){
 }
 overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeSheet(); });
 
+/* ---- Custom confirm (native confirm()/alert() are suppressed in iOS home-screen web apps) ---- */
+let _confirmAction = null;
+function openConfirmSheet(message, action, confirmLabel){
+  _confirmAction = action;
+  sheetContent.innerHTML = `
+    <div class="sheet-grip"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">请确认</div>
+      <div class="sheet-close" onclick="closeSheet()">取消</div>
+    </div>
+    <p style="font-size:13.5px; color:var(--ink-soft); line-height:1.7; margin:0 0 18px;">${escapeHtml(message)}</p>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeSheet()">取消</button>
+      <button class="btn btn-danger" onclick="runConfirmAction()">${confirmLabel||'确定'}</button>
+    </div>
+  `;
+  overlay.classList.add('open');
+}
+function runConfirmAction(){
+  const fn = _confirmAction;
+  _confirmAction = null;
+  if(fn) fn();
+}
+
 function openForm(key, entry=null){
   const cfg = MODULES[key];
+  const fields = getFields(key);
   const isEdit = !!entry;
-  let fieldsHtml = cfg.fields.map(f=>{
+  let fieldsHtml = fields.map(f=>{
+    if(f.type==='petselect'){
+      const cur = entry ? (entry.petId||'') : (state.pets[0]? state.pets[0].id : '');
+      const opts = state.pets.map(p=>`<option value="${p.id}" ${cur===p.id?'selected':''}>${escapeHtml(p.name||'未命名')}</option>`).join('');
+      return `<div class="field"><label>${f.label}</label><select id="f_${f.key}">${opts}</select></div>`;
+    }
     const val = entry ? (entry[f.key]||'') : (f.default? f.default(): '');
     if(f.type==='textarea'){
       return `<div class="field"><label>${f.label}</label><textarea id="f_${f.key}" placeholder="${f.placeholder||''}">${escapeHtml(val)}</textarea></div>`;
@@ -831,16 +1042,19 @@ function openForm(key, entry=null){
 }
 
 function saveEntry(key, id=null){
-  const cfg = MODULES[key];
+  const fields = getFields(key);
   const obj = id ? {...state.data[key].find(e=>e.id===id)} : {id: uid()};
   let missingRequired = false;
-  cfg.fields.forEach(f=>{
+  fields.forEach(f=>{
     const el = document.getElementById('f_'+f.key);
     const v = el ? el.value.trim() : '';
     if(f.required && !v) missingRequired = true;
     obj[f.key] = v;
   });
   if(missingRequired){ showToast('请填写必填项'); return; }
+  if(PET_SCOPED.includes(key) && state.pets.length<=1){
+    obj.petId = state.pets[0] ? state.pets[0].id : '';
+  }
   if(id){
     const idx = state.data[key].findIndex(e=>e.id===id);
     state.data[key][idx] = obj;
@@ -863,9 +1077,15 @@ function deleteEntry(key, id){
 
 function openEntryDetail(key, id){
   const cfg = MODULES[key];
+  const fields = getFields(key);
   const entry = state.data[key].find(e=>e.id===id);
   if(!entry) return;
-  let rows = cfg.fields.map(f=>{
+  let rows = fields.map(f=>{
+    if(f.type==='petselect'){
+      const p = petById(entry.petId);
+      if(!p) return '';
+      return `<div class="row"><div class="k">${f.label}</div><div class="v">${escapeHtml(p.name||'未命名')}</div></div>`;
+    }
     const v = entry[f.key];
     if(!v) return '';
     return `<div class="row"><div class="k">${f.label}</div><div class="v">${escapeHtml(v)}</div></div>`;
@@ -885,33 +1105,63 @@ function openEntryDetail(key, id){
   overlay.classList.add('open');
 }
 
-/* ---- Profile edit ---- */
-let pendingAvatar = null;
-function openProfileEdit(){
-  pendingAvatar = null;
-  const avatarPreview = state.profile.avatar
-    ? `<img src="${state.profile.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
-    : ICONS.paw.replace('currentColor','var(--gold-soft)');
+/* ---- App title edit ---- */
+function openTitleEdit(){
   sheetContent.innerHTML = `
     <div class="sheet-grip"></div>
     <div class="sheet-head">
-      <div class="sheet-title">狗狗信息</div>
+      <div class="sheet-title">应用名称</div>
+      <div class="sheet-close" onclick="closeSheet()">取消</div>
+    </div>
+    <div class="field"><label>名称</label><input id="s_title" type="text" placeholder="宠物日记" value="${escapeHtml(state.settings.appTitle||'')}"></div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="saveTitle()">保存</button></div>
+  `;
+  overlay.classList.add('open');
+}
+function saveTitle(){
+  state.settings.appTitle = document.getElementById('s_title').value.trim();
+  saveObj('settings', state.settings);
+  closeSheet();
+  render();
+  showToast('已保存');
+}
+
+/* ---- Pet edit (add / edit / delete) ---- */
+let pendingAvatar = null;
+let editingPetId = null;
+
+function openPetEdit(petId){
+  editingPetId = petId;
+  pendingAvatar = null;
+  const pet = petId ? petById(petId) : null;
+  const avatarPreview = pet && pet.avatar
+    ? `<img src="${pet.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+    : ICONS.paw.replace('currentColor','var(--gold-soft)');
+  const showCam = !(pet && pet.avatar);
+  sheetContent.innerHTML = `
+    <div class="sheet-grip"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">${pet? '编辑宠物':'添加宠物'}</div>
       <div class="sheet-close" onclick="closeSheet()">取消</div>
     </div>
     <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:18px;">
       <div id="avatarPreviewWrap" class="tag-badge" style="margin-bottom:10px; cursor:pointer;" onclick="document.getElementById('avatarInput').click()">
-        <div class="tag-hole"></div>
         ${avatarPreview}
-        ${state.profile.avatar ? '' : `<div class="avatar-edit-badge">${ICONS.camera}</div>`}
+        ${showCam? `<div class="avatar-edit-badge">${ICONS.camera}</div>`:''}
       </div>
       <div style="display:flex; gap:14px;">
         <span style="font-size:12.5px; color:var(--gold); font-weight:600; cursor:pointer;" onclick="document.getElementById('avatarInput').click()">更换头像</span>
-        ${state.profile.avatar ? `<span style="font-size:12.5px; color:var(--danger); font-weight:600; cursor:pointer;" onclick="removeAvatar()">移除头像</span>` : ''}
+        ${pet && pet.avatar ? `<span style="font-size:12.5px; color:var(--danger); font-weight:600; cursor:pointer;" onclick="removeAvatar()">移除头像</span>` : ''}
       </div>
     </div>
-    <div class="field"><label>名字</label><input id="p_name" type="text" value="${escapeHtml(state.profile.name||'')}"></div>
-    <div class="field"><label>生日（选填）</label><input id="p_birthday" type="date" value="${escapeHtml(state.profile.birthday||'')}"></div>
-    <div class="btn-row"><button class="btn btn-primary" onclick="saveProfile()">保存</button></div>
+    <div class="field"><label>宠物昵称</label><input id="p_name" type="text" placeholder="宠物昵称" value="${escapeHtml(pet? pet.name||'':'')}"></div>
+    <div class="field"><label>品种 / 简介</label><input id="p_breed" type="text" placeholder="${state.settings.species==='cat'?'如：英短蓝猫':'如：黑银迷你雪纳瑞'}" value="${escapeHtml(pet? pet.breed||'':'')}"></div>
+    <div class="field"><label>出生日期（选填，用于显示日龄）</label><input id="p_birthday" type="date" value="${escapeHtml(pet? pet.birthday||'':'')}"></div>
+    ${pet? `<div style="text-align:center; margin:-4px 0 16px;"><span style="font-size:12.5px; color:var(--gold); font-weight:600; cursor:pointer;" onclick="openPetEdit(null)">＋ 添加另一只宠物</span></div>` : ''}
+    <div class="btn-row">
+      ${pet? `<button class="btn btn-danger" onclick="deletePet('${pet.id}')">删除宠物</button>`:''}
+      <button class="btn btn-primary" onclick="savePet()">保存</button>
+    </div>
   `;
   overlay.classList.add('open');
 }
@@ -920,7 +1170,7 @@ function removeAvatar(){
   pendingAvatar = 'REMOVE';
   const wrap = document.getElementById('avatarPreviewWrap');
   if(wrap){
-    wrap.innerHTML = `<div class="tag-hole"></div>${ICONS.paw.replace('currentColor','var(--gold-soft)')}<div class="avatar-edit-badge">${ICONS.camera}</div>`;
+    wrap.innerHTML = `${ICONS.paw.replace('currentColor','var(--gold-soft)')}<div class="avatar-edit-badge">${ICONS.camera}</div>`;
   }
 }
 
@@ -963,27 +1213,56 @@ document.getElementById('avatarInput').addEventListener('change', async function
   e.target.value = '';
 });
 
-function saveProfile(){
-  state.profile.name = document.getElementById('p_name').value.trim() || '狗狗';
-  state.profile.birthday = document.getElementById('p_birthday').value;
-  if(pendingAvatar === 'REMOVE'){ delete state.profile.avatar; }
-  else if(pendingAvatar){ state.profile.avatar = pendingAvatar; }
-  saveObj('profile', state.profile).then(ok=>{
-    if(ok === undefined){} // no-op, errors already logged in saveObj
-  });
+function savePet(){
+  const name = document.getElementById('p_name').value.trim();
+  const breed = document.getElementById('p_breed').value.trim();
+  const birthday = document.getElementById('p_birthday').value;
+  const species = state.settings.species || 'dog';
+  if(editingPetId){
+    const p = petById(editingPetId);
+    p.name = name; p.species = species; p.breed = breed; p.birthday = birthday;
+    if(pendingAvatar === 'REMOVE'){ delete p.avatar; }
+    else if(pendingAvatar){ p.avatar = pendingAvatar; }
+  }else{
+    const np = {id:uid(), name, species, breed, birthday};
+    if(pendingAvatar && pendingAvatar!=='REMOVE'){ np.avatar = pendingAvatar; }
+    state.pets.push(np);
+  }
+  saveObj('pets', state.pets);
   closeSheet();
   render();
   showToast('已保存');
 }
 
+function deletePet(id){
+  openConfirmSheet('确定删除这只宠物吗？它名下的记录不会被删除，但会显示为"未分配"。', ()=>{
+    state.pets = state.pets.filter(p=>p.id!==id);
+    saveObj('pets', state.pets);
+    closeSheet();
+    render();
+    showToast('已删除');
+  }, '删除');
+}
+
 /* ---- Backup / restore ---- */
 function openBackupSheet(){
   const total = Object.values(state.data).reduce((s,arr)=>s+arr.length,0);
+  const isCat = state.settings.species==='cat';
+  const speciesLabel = isCat ? '猫咪家庭' : '狗狗家庭';
+  const switchTo = isCat ? 'dog' : 'cat';
+  const switchLabel = isCat ? '切换为狗狗模式' : '切换为猫咪模式';
   sheetContent.innerHTML = `
     <div class="sheet-grip"></div>
     <div class="sheet-head">
-      <div class="sheet-title">备份与恢复</div>
+      <div class="sheet-title">设置与备份</div>
       <div class="sheet-close" onclick="closeSheet()">关闭</div>
+    </div>
+    <div class="field">
+      <label>宠物类型</label>
+      <div style="display:flex; align-items:center; justify-content:space-between; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:11px 13px;">
+        <span style="font-size:14.5px; color:var(--ink);">${speciesLabel}</span>
+        <span style="font-size:12.5px; color:var(--gold); font-weight:600; cursor:pointer;" onclick="switchSpecies('${switchTo}')">${switchLabel}</span>
+      </div>
     </div>
     <p style="font-size:12.5px;color:var(--ink-soft);line-height:1.7;margin:0 0 16px;">
       所有记录都只保存在这台设备的浏览器里，不会自动同步。建议定期导出备份文件存到 iCloud / 文件 App，换设备或清除数据后可以导入恢复。当前共 <b style="color:var(--ink)">${total}</b> 条记录。
@@ -997,13 +1276,13 @@ function openBackupSheet(){
 }
 
 function exportBackup(){
-  const payload = { exportedAt:new Date().toISOString(), profile:state.profile, data:state.data };
+  const payload = { exportedAt:new Date().toISOString(), pets:state.pets, settings:state.settings, data:state.data };
   const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const d = new Date();
   a.href = url;
-  a.download = `雪纳瑞日记备份_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.json`;
+  a.download = `${state.settings.appTitle||'宠物日记'}备份_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -1025,9 +1304,17 @@ document.getElementById('importInput').addEventListener('change', function(e){
           await saveArr(key, state.data[key]);
         }
       }
-      if(payload.profile){
-        state.profile = payload.profile;
-        await saveObj('profile', state.profile);
+      if(Array.isArray(payload.pets)){
+        state.pets = payload.pets;
+        await saveObj('pets', state.pets);
+      }else if(payload.profile){
+        // backward compatibility with older single-pet backups
+        state.pets = [{id:uid(), name:payload.profile.name||'', species:'dog', breed:'', avatar:payload.profile.avatar||''}];
+        await saveObj('pets', state.pets);
+      }
+      if(payload.settings){
+        state.settings = payload.settings;
+        await saveObj('settings', state.settings);
       }
       closeSheet();
       goHome();
@@ -1050,11 +1337,53 @@ function showToast(msg){
   toastTimer = setTimeout(()=> t.classList.remove('show'), 1600);
 }
 
+/* ================= Onboarding (first run: choose dog / cat household) ================= */
+function showOnboarding(){
+  app.innerHTML = `
+    <div style="min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 30px; text-align:center;">
+      <div class="tag-badge" style="margin-bottom:22px;">${ICONS.paw.replace('currentColor','var(--gold-soft)')}</div>
+      <h1 style="font-family:var(--font-display); font-size:23px; font-weight:600; margin:0 0 10px; color:var(--ink);">家里养的是？</h1>
+      <p style="font-size:13.5px; color:var(--ink-soft); margin:0 0 28px; line-height:1.7; max-width:280px;">选择后会显示对应的日常记录内容，之后仍可以在设置里切换</p>
+      <div style="display:flex; gap:14px; width:100%; max-width:300px;">
+        <button class="btn btn-primary" style="flex:1; padding:22px 0; font-size:15px;" onclick="chooseSpecies('dog')">🐶<br><span>养狗</span></button>
+        <button class="btn btn-primary" style="flex:1; padding:22px 0; font-size:15px;" onclick="chooseSpecies('cat')">🐱<br><span>养猫</span></button>
+      </div>
+    </div>
+  `;
+}
+
+async function chooseSpecies(species){
+  state.settings.species = species;
+  await saveObj('settings', state.settings);
+  buildModules();
+  await loadModuleData();
+  render();
+}
+
+function switchSpecies(sp){
+  const msg = sp==='cat'
+    ? '切换为猫咪模式后，将显示"玩耍/互动"和"如厕记录"。原有遛狗记录不会被删除，只是暂时不显示，切回狗狗模式还能看到。'
+    : '切换为狗狗模式后，将显示"遛狗/运动"。原有猫咪相关记录不会被删除，只是暂时不显示，切回猫咪模式还能看到。';
+  openConfirmSheet(msg, async ()=>{
+    state.settings.species = sp;
+    await saveObj('settings', state.settings);
+    buildModules();
+    await loadModuleData();
+    closeSheet();
+    goHome();
+    showToast('已切换');
+  }, '确定切换');
+}
+
 /* ================= Boot ================= */
 (async function boot(){
   app.innerHTML = `<div style="padding:60px 20px;text-align:center;color:var(--ink-faint);font-size:13px;">加载中…</div>`;
   await initData();
-  render();
+  if(!state.settings.species){
+    showOnboarding();
+  }else{
+    render();
+  }
 })();
 </script>
 </body>
