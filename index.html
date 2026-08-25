@@ -166,9 +166,11 @@
     background:var(--ink); border-radius:14px;
     display:flex; align-items:center; gap:10px;
     color:var(--gold-soft); font-size:12.5px;
+    cursor:pointer;
   }
   .reminder-strip svg{width:16px; height:16px; flex:none; color:var(--gold);}
   .reminder-strip b{color:#fff; font-weight:600;}
+  .reminder-strip .chev-r{ margin-left:auto; color:var(--silver); width:14px; height:14px; flex:none; }
 
   /* ---------- Grouped list (home grid) ---------- */
   .group{ margin:22px 18px 0; }
@@ -714,11 +716,11 @@ function renderHome(){
   });
   const reminders = [];
   Object.values(latestByGroup).forEach(e=>{
-    if(e.nextDate){
+    if(e.nextDate && e.reminderStatus!=='done'){
       const d = daysSince(e.nextDate);
       if(d !== null && d > -15){
         const pet = state.pets.length>1 ? petById(e.petId) : null;
-        reminders.push({item:e.item||e.type, date:e.nextDate, overdue: d>=0, petName: pet? pet.name : ''});
+        reminders.push({item:e.item||e.type, date:e.nextDate, overdue: d>=0, petName: pet? pet.name : '', entryId:e.id});
       }
     }
   });
@@ -787,9 +789,10 @@ function renderHome(){
 
   if(topReminder){
     html += `
-      <div class="reminder-strip">
+      <div class="reminder-strip" onclick="openReminderAction('${topReminder.entryId}')">
         ${ICONS.bell}
         <div>${topReminder.overdue?'已到期提醒':'即将提醒'}：<b>${topReminder.petName? escapeHtml(topReminder.petName)+' · ':''}${escapeHtml(topReminder.item)}</b> · ${fmtDateFull(topReminder.date)}</div>
+        <div class="chev-r">${ICONS.chev}</div>
       </div>
     `;
   }
@@ -847,6 +850,7 @@ function renderDetail(key){
       const secondary = escapeHtml(cfg.secondary ? cfg.secondary(e) : '');
       const tag = cfg.tag ? cfg.tag(e) : '';
       const petTag = showPetTag ? (petById(e.petId)?.name || '未分配') : '';
+      const doneTag = (key==='health' && e.reminderStatus==='done');
       html += `
         <div class="entry-card" onclick="openEntryDetail('${key}','${e.id}')">
           <div class="entry-main">
@@ -856,6 +860,7 @@ function renderDetail(key){
           <div class="entry-side">
             <div class="d">${tag}</div>
             ${cfg.pill? `<div class="tag">${escapeHtml(cfg.pill(e))}</div>` : ''}
+            ${doneTag? `<div class="tag" style="margin-top:4px; background:rgba(76,122,94,.15); color:var(--good);">已完成</div>` : ''}
             ${petTag? `<div class="tag" style="margin-top:4px;">${escapeHtml(petTag)}</div>` : ''}
           </div>
         </div>
@@ -1090,6 +1095,9 @@ function openEntryDetail(key, id){
     if(!v) return '';
     return `<div class="row"><div class="k">${f.label}</div><div class="v">${escapeHtml(v)}</div></div>`;
   }).join('');
+  if(key==='health' && entry.reminderStatus==='done'){
+    rows += `<div class="row"><div class="k">提醒状态</div><div class="v" style="color:var(--good);">已完成</div></div>`;
+  }
   sheetContent.innerHTML = `
     <div class="sheet-grip"></div>
     <div class="sheet-head">
@@ -1245,6 +1253,63 @@ function deletePet(id){
 }
 
 /* ---- Backup / restore ---- */
+/* ---- Health reminder action (mark done / reschedule) ---- */
+function openReminderAction(entryId){
+  const e = state.data.health.find(x=>x.id===entryId);
+  if(!e) return;
+  sheetContent.innerHTML = `
+    <div class="sheet-grip"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">${escapeHtml(e.item||e.type||'提醒事项')}</div>
+      <div class="sheet-close" onclick="closeSheet()">关闭</div>
+    </div>
+    <p style="font-size:13.5px;color:var(--ink-soft);line-height:1.7;margin:0 0 18px;">提醒日期：${fmtDateFull(e.nextDate)}。这件事完成了吗？</p>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="markReminderPending('${entryId}')">未完成，稍后提醒</button>
+      <button class="btn btn-primary" onclick="markReminderDone('${entryId}')">已完成</button>
+    </div>
+  `;
+  overlay.classList.add('open');
+}
+
+function markReminderDone(entryId){
+  const e = state.data.health.find(x=>x.id===entryId);
+  if(!e) return;
+  e.reminderStatus = 'done';
+  saveArr('health', state.data.health);
+  closeSheet();
+  render();
+  showToast('已标记完成');
+}
+
+function markReminderPending(entryId){
+  const e = state.data.health.find(x=>x.id===entryId);
+  if(!e) return;
+  sheetContent.innerHTML = `
+    <div class="sheet-grip"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">下次什么时候提醒？</div>
+      <div class="sheet-close" onclick="closeSheet()">取消</div>
+    </div>
+    <div class="field"><label>新的提醒日期</label><input id="f_newNextDate" type="date" value="${escapeHtml(e.nextDate||'')}"></div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="saveNewReminderDate('${entryId}')">保存</button></div>
+  `;
+  overlay.classList.add('open');
+}
+
+function saveNewReminderDate(entryId){
+  const e = state.data.health.find(x=>x.id===entryId);
+  if(!e) return;
+  const v = document.getElementById('f_newNextDate').value;
+  if(!v){ showToast('请选择日期'); return; }
+  e.nextDate = v;
+  e.reminderStatus = '';
+  saveArr('health', state.data.health);
+  closeSheet();
+  render();
+  showToast('已更新提醒');
+}
+
 function openBackupSheet(){
   const total = Object.values(state.data).reduce((s,arr)=>s+arr.length,0);
   const isCat = state.settings.species==='cat';
