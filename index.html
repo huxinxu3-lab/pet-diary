@@ -1442,13 +1442,29 @@ function switchSpecies(sp){
 /* ================= Boot ================= */
 (async function boot(){
   app.innerHTML = `<div style="padding:60px 20px;text-align:center;color:var(--ink-faint);font-size:13px;">加载中…</div>`;
-  await initData();
-  if(!state.settings.species){
-    showOnboarding();
-  }else{
-    render();
+  try{
+    await initData();
+    if(!state.settings.species){
+      showOnboarding();
+    }else{
+      render();
+    }
+  }catch(err){
+    console.error('boot failed', err);
+    app.innerHTML = `
+      <div style="padding:80px 30px;text-align:center;">
+        <p style="font-size:14px;color:var(--ink-soft);margin:0 0 16px;line-height:1.7;">加载时出了点问题，试试重新打开一下</p>
+        <button class="btn btn-primary" style="max-width:160px;margin:0 auto;padding:11px 20px;" onclick="location.reload()">重新加载</button>
+      </div>
+    `;
   }
 })();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>
