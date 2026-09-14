@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pet-diary-v2';
+const CACHE_NAME = 'pet-diary-v3';
 const ASSETS = [
   './',
   './index.html',

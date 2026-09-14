@@ -161,17 +161,6 @@
   .stat-chip .v{ font-family:var(--font-mono); font-size:16px; font-weight:600; color:var(--ink);}
   .stat-chip .l{ font-size:10.5px; color:var(--ink-faint); margin-top:2px; letter-spacing:.2px;}
 
-  .reminder-strip{
-    margin:14px 20px 0; padding:11px 14px;
-    background:var(--ink); border-radius:14px;
-    display:flex; align-items:center; gap:10px;
-    color:var(--gold-soft); font-size:12.5px;
-    cursor:pointer;
-  }
-  .reminder-strip svg{width:16px; height:16px; flex:none; color:var(--gold);}
-  .reminder-strip b{color:#fff; font-weight:600;}
-  .reminder-strip .chev-r{ margin-left:auto; color:var(--silver); width:14px; height:14px; flex:none; }
-
   /* ---------- Grouped list (home grid) ---------- */
   .group{ margin:22px 18px 0; }
   .group-label{
@@ -204,10 +193,78 @@
   }
   .chev{ width:15px; height:15px; color:var(--ink-faint); flex:none; }
 
-  .bottom-pad{ height:40px; }
+  .bottom-pad{ height:calc(90px + var(--safe-bottom)); }
+
+  /* ---------- Tab bar ---------- */
+  .tabbar{
+    position:fixed; left:50%; bottom:0; transform:translateX(-50%);
+    width:100%; max-width:480px;
+    display:flex; background:rgba(245,243,238,.92); backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);
+    padding:8px 4px calc(8px + var(--safe-bottom));
+    z-index:30;
+  }
+  .tab-item{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+    color:var(--ink-faint); cursor:pointer; padding:2px 0;
+  }
+  .tab-item svg{ width:22px; height:22px; }
+  .tab-item .tab-label{ font-size:10px; font-weight:600; letter-spacing:.2px; }
+  .tab-item.active{ color:var(--ink); }
+  .tab-item.active .tab-icon{ color:var(--gold); }
+
+  /* ---------- Todo / reminder cards ---------- */
+  .todo-section{ display:flex; flex-direction:column; gap:10px; }
+  .todo-card{
+    background:var(--ink); border-radius:16px; padding:13px 14px;
+    display:flex; align-items:flex-start; gap:12px; cursor:pointer;
+    color:var(--silver-soft);
+  }
+  .todo-card.med{ cursor:default; }
+  .todo-card .todo-icon{
+    width:34px; height:34px; border-radius:10px; flex:none; margin-top:1px;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.08); color:var(--gold);
+  }
+  .todo-card .todo-icon svg{ width:18px; height:18px; }
+  .todo-card .todo-body{ flex:1; min-width:0; }
+  .todo-card .todo-title{ font-size:14px; font-weight:600; color:#fff; }
+  .todo-card .todo-sub{ font-size:11.5px; color:var(--silver); margin-top:3px; }
+  .todo-card .chev{ color:var(--silver); margin-top:8px; flex:none; width:15px; height:15px; }
+  .todo-card.urgent{ background:#93502a; }
+  .todo-card.urgent .todo-icon{ color:#ffdcb0; background:rgba(255,255,255,.14); }
+  .todo-card.urgent .todo-sub{ color:#ffdfbb; }
+  .todo-card.med:not(.urgent){ opacity:.8; }
+
+  .dose-row{ display:flex; gap:6px; margin-top:9px; flex-wrap:wrap; }
+  .dose-box{
+    width:29px; height:29px; border-radius:9px; background:rgba(255,255,255,.12);
+    color:#fff; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; cursor:pointer; flex:none;
+  }
+  .dose-box.taken{ background:var(--good); }
+
+  /* ---------- Segmented toggle & med cards (used in 病历 form) ---------- */
+  .seg{ display:flex; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .seg-opt{
+    flex:1; text-align:center; padding:10px 0; font-size:13.5px; font-weight:600;
+    color:var(--ink-soft); background:var(--card); cursor:pointer;
+  }
+  .seg-opt.active{ background:var(--ink); color:#fff; }
+  .med-card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:12px 14px; margin-bottom:10px;
+  }
+  .med-card-head{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:10px;
+  }
+  .med-remove{ color:var(--danger); font-size:12px; cursor:pointer; font-weight:600; }
+
 
   /* ---------- Detail view ---------- */
-  .detail-body{ padding:4px 18px 20px; flex:1; }
+  .detail-body{ padding:4px 18px calc(150px + var(--safe-bottom)); flex:1; }
   .summary-card{
     background:var(--ink); color:var(--pearl); border-radius:18px;
     padding:18px; margin:6px 0 18px;
@@ -251,7 +308,7 @@
   .empty-state b{ color:var(--ink-soft); }
 
   .fab{
-    position:fixed; right:calc(50% - 240px + 20px); bottom:calc(24px + var(--safe-bottom));
+    position:fixed; right:calc(50% - 240px + 20px); bottom:calc(72px + var(--safe-bottom));
     width:54px; height:54px; border-radius:50%; background:var(--ink); color:#fff;
     display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;
     box-shadow:0 10px 24px rgba(23,24,28,.35); z-index:25;
@@ -345,6 +402,9 @@ const ICONS = {
   pin: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.5 7-11.5A7 7 0 0 0 5 9.5C5 14.5 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>`,
   trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/></svg>`,
   potty: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="10" rx="2.5"/><path d="M3.5 9c0-3.3 2.3-5.5 5.5-5.5h6c3.2 0 5.5 2.2 5.5 5.5"/><path d="M9 14.2h.01M15 14.2h.01"/></svg>`,
+  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/></svg>`,
+  calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>`,
+  pill: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8" width="19" height="8" rx="4" transform="rotate(-30 12 12)"/><line x1="12" y1="6.5" x2="12" y2="17.5" transform="rotate(-30 12 12)"/></svg>`,
 };
 
 /* ================= Storage helpers (本地 localStorage，无需登录) ================= */
@@ -588,18 +648,26 @@ function buildModules(){
   };
 
   m.medical = {
-    label:'病历', icon:ICONS.clipboard, desc:'就诊 · 诊断 · 用药', group:'健康',
+    label:'病历', icon:ICONS.clipboard, desc:'就诊 · 诊断 · 用药跟踪', group:'健康',
     dateField:'date',
     fields:[
       {key:'date', label:'就诊日期', type:'date', required:true, default:()=>todayStr()},
       {key:'clinic', label:'医院 / 诊所', type:'text', placeholder:'如：xx宠物医院'},
       {key:'diagnosis', label:'症状 / 诊断', type:'textarea', placeholder:'主诉症状、医生诊断'},
-      {key:'treatment', label:'处理 / 用药', type:'textarea', placeholder:'治疗方案、用药名称与用量'},
+      {key:'treatment', label:'处理方案（选填）', type:'textarea', placeholder:'除用药外的其他处理，用药信息见下方'},
       {key:'cost', label:'费用（¥，选填）', type:'number'},
       {key:'note', label:'备注', type:'textarea'},
     ],
     primary:e=>e.diagnosis || '就诊记录',
-    secondary:e=>[e.clinic, e.treatment].filter(Boolean).join(' · '),
+    secondary:e=>{
+      const parts=[e.clinic];
+      if(e.hasMeds && Array.isArray(e.meds) && e.meds.length){
+        parts.push('用药 '+e.meds.length+' 项');
+      }else if(e.treatment){
+        parts.push(e.treatment);
+      }
+      return parts.filter(Boolean).join(' · ');
+    },
     tag:e=>fmtDate(e.date),
     emptyText:'还没有病历，就诊后记录下来方便复查',
   };
@@ -628,6 +696,9 @@ function buildModules(){
 }
 
 const GROUP_ORDER = ['日常','健康','生活','其他'];
+const TAB_KEYS = ['daily','health','life','other'];
+const GROUP_TO_TAB = {'日常':'daily','健康':'health','生活':'life','其他':'other'};
+const TAB_TO_GROUP = {'daily':'日常','health':'健康','life':'生活','other':'其他'};
 
 /* ================= App state ================= */
 const state = {
@@ -688,24 +759,40 @@ function sortedEntries(key){
 /* ================= Rendering ================= */
 const app = document.getElementById('appContent');
 
-function render(){
-  document.title = state.settings.appTitle || '宠物日记';
-  if(state.view === 'home') renderHome();
-  else renderDetail(state.view);
+function activeTabKey(){
+  if(state.view==='home') return 'home';
+  if(TAB_KEYS.includes(state.view)) return state.view;
+  const cfg = MODULES[state.view];
+  if(cfg) return GROUP_TO_TAB[cfg.group] || 'home';
+  return 'home';
 }
 
-function renderHome(){
-  const feeding = sortedEntries('feeding');
-  const walk = sortedEntries(ACTIVITY_KEY);
-  const weight = sortedEntries('weight');
+function renderTabBarHtml(){
+  const active = activeTabKey();
+  const items = [
+    {key:'home', label:'首页', icon:ICONS.home, action:"goHome()"},
+    {key:'daily', label:'日常', icon:ICONS.calendar, action:"goTab('daily')"},
+    {key:'health', label:'健康', icon:ICONS.heart, action:"goTab('health')"},
+    {key:'life', label:'生活', icon:ICONS.box, action:"goTab('life')"},
+    {key:'other', label:'其他', icon:ICONS.note, action:"goTab('other')"},
+  ];
+  return `
+    <div class="tabbar">
+      ${items.map(it=>`
+        <div class="tab-item ${active===it.key?'active':''}" onclick="${it.action}">
+          <div class="tab-icon">${it.icon}</div>
+          <div class="tab-label">${it.label}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
 
-  const todayFeeds = feeding.filter(e => (e.datetime||'').slice(0,10) === todayStr()).length;
-  const lastWalkDays = walk.length ? daysSince(walk[0].datetime) : null;
-  const latestWeight = weight.length ? weight[0].weight : null;
-
-  // reminders: only the most recent entry per (pet, type) counts — an older
-  // entry's nextDate is considered superseded once a newer entry of the same
-  // type has been logged (e.g. 第二针 supersedes 第一针's "next shot" reminder).
+/* ---- Unified todo/reminder data (health next-due items + active medication courses) ---- */
+function getTodoData(){
+  // health reminders: only the most recent entry per (pet, type) counts — an
+  // older entry's nextDate is considered superseded once a newer entry of the
+  // same type has been logged (e.g. 第二针 supersedes 第一针's "next shot").
   const latestByGroup = {};
   state.data.health.forEach(e=>{
     const gKey = (e.petId||'') + '|' + (e.type||'');
@@ -718,14 +805,109 @@ function renderHome(){
   Object.values(latestByGroup).forEach(e=>{
     if(e.nextDate && e.reminderStatus!=='done'){
       const d = daysSince(e.nextDate);
-      if(d !== null && d > -15){
+      if(d !== null && d >= -7){
         const pet = state.pets.length>1 ? petById(e.petId) : null;
-        reminders.push({item:e.item||e.type, date:e.nextDate, overdue: d>=0, petName: pet? pet.name : '', entryId:e.id});
+        reminders.push({item:e.item||e.type, date:e.nextDate, overdue: d>=0, urgent: d>=-3, petName: pet? pet.name : '', entryId:e.id});
       }
     }
   });
   reminders.sort((a,b)=> new Date(a.date) - new Date(b.date));
-  const topReminder = reminders.find(r=>true);
+
+  // medication daily doses: for each active course (today within start..start+days-1)
+  const medTasks = [];
+  const today = todayStr();
+  const now = new Date(today+'T00:00:00');
+  state.data.medical.forEach(entry=>{
+    if(!entry.hasMeds || !Array.isArray(entry.meds)) return;
+    entry.meds.forEach(med=>{
+      if(med.stopped || !med.startDate) return;
+      const days = parseInt(med.days,10)||1;
+      const start = new Date(med.startDate+'T00:00:00');
+      const end = new Date(start.getTime() + (days-1)*86400000);
+      if(now < start || now > end) return;
+      const n = Math.max(1, parseInt(med.timesPerDay,10)||1);
+      let takenCount = 0;
+      for(let i=0;i<n;i++){ if(med.log && med.log[today+'_'+i]) takenCount++; }
+      const dayIndex = Math.floor((now-start)/86400000)+1;
+      const pet = state.pets.length>1 ? petById(entry.petId) : null;
+      medTasks.push({
+        entryId: entry.id, medId: med.id, name: med.name, n, takenCount,
+        dayIndex, totalDays: days, petName: pet? pet.name:'', done: takenCount>=n,
+        log: med.log||{},
+      });
+    });
+  });
+
+  return {reminders, medTasks};
+}
+
+function renderTodoSection(reminders, medTasks){
+  if(!reminders.length && !medTasks.length) return '';
+  let html = `<div class="todo-section">`;
+  reminders.forEach(r=>{
+    html += `
+      <div class="todo-card ${(r.overdue||r.urgent)?'urgent':''}" onclick="openReminderAction('${r.entryId}')">
+        <div class="todo-icon">${ICONS.bell}</div>
+        <div class="todo-body">
+          <div class="todo-title">${r.petName? escapeHtml(r.petName)+' · ':''}${escapeHtml(r.item)}</div>
+          <div class="todo-sub">${r.overdue?'已到期':'即将提醒'} · ${fmtDateFull(r.date)}</div>
+        </div>
+        <div class="chev">${ICONS.chev}</div>
+      </div>
+    `;
+  });
+  medTasks.forEach(t=>{
+    const boxes = Array.from({length:t.n}).map((_,i)=>{
+      const taken = !!t.log[todayStr()+'_'+i];
+      return `<span class="dose-box ${taken?'taken':''}" onclick="toggleDose('${t.entryId}','${t.medId}',${i})">${taken? '✓' : (i+1)}</span>`;
+    }).join('');
+    html += `
+      <div class="todo-card med ${t.done?'':'urgent'}">
+        <div class="todo-icon">${ICONS.pill}</div>
+        <div class="todo-body">
+          <div class="todo-title">${t.petName? escapeHtml(t.petName)+' · ':''}${escapeHtml(t.name)}</div>
+          <div class="todo-sub">第 ${t.dayIndex}/${t.totalDays} 天 · 今日 ${t.takenCount}/${t.n} 次</div>
+          <div class="dose-row">${boxes}</div>
+        </div>
+      </div>
+    `;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function toggleDose(entryId, medId, doseIndex){
+  const entry = state.data.medical.find(e=>e.id===entryId);
+  if(!entry) return;
+  const med = (entry.meds||[]).find(m=>m.id===medId);
+  if(!med) return;
+  if(!med.log) med.log = {};
+  const key = todayStr()+'_'+doseIndex;
+  if(med.log[key]) delete med.log[key]; else med.log[key] = true;
+  saveArr('medical', state.data.medical);
+  render();
+}
+
+function render(){
+  document.title = state.settings.appTitle || '宠物日记';
+  let html;
+  if(state.view === 'home') html = buildHomeHtml();
+  else if(TAB_KEYS.includes(state.view)) html = buildTabPageHtml(state.view);
+  else html = buildDetailHtml(state.view);
+  html += renderTabBarHtml();
+  app.innerHTML = html;
+}
+
+function buildHomeHtml(){
+  const feeding = sortedEntries('feeding');
+  const walk = sortedEntries(ACTIVITY_KEY);
+  const weight = sortedEntries('weight');
+
+  const todayFeeds = feeding.filter(e => (e.datetime||'').slice(0,10) === todayStr()).length;
+  const lastWalkDays = walk.length ? daysSince(walk[0].datetime) : null;
+  const latestWeight = weight.length ? weight[0].weight : null;
+
+  const {reminders, medTasks} = getTodoData();
 
   // header: avatar area
   let headerHtml = '';
@@ -787,45 +969,60 @@ function renderHome(){
     </div>
   `;
 
-  if(topReminder){
-    html += `
-      <div class="reminder-strip" onclick="openReminderAction('${topReminder.entryId}')">
-        ${ICONS.bell}
-        <div>${topReminder.overdue?'已到期提醒':'即将提醒'}：<b>${topReminder.petName? escapeHtml(topReminder.petName)+' · ':''}${escapeHtml(topReminder.item)}</b> · ${fmtDateFull(topReminder.date)}</div>
-        <div class="chev-r">${ICONS.chev}</div>
-      </div>
-    `;
+  const todoHtml = renderTodoSection(reminders, medTasks);
+  if(todoHtml){
+    html += `<div style="margin:18px 18px 0;"><div class="group-label" style="margin:0 2px 8px;">提醒与待办</div>${todoHtml}</div>`;
+  }else{
+    html += `<div style="margin:26px 20px 0; text-align:center; color:var(--ink-faint); font-size:12.5px;">暂时没有需要处理的提醒</div>`;
   }
 
-  GROUP_ORDER.forEach(group=>{
-    const keys = Object.keys(MODULES).filter(k=>MODULES[k].group===group);
-    if(!keys.length) return;
-    html += `<div class="group"><div class="group-label">${group}</div><div class="group-card">`;
-    keys.forEach(k=>{
-      const cfg = MODULES[k];
-      const count = state.data[k].length;
-      html += `
-        <div class="mod-row" onclick="goTo('${k}')">
-          <div class="mod-icon">${cfg.icon}</div>
-          <div class="mod-text"><div class="t">${cfg.label}</div><div class="d">${cfg.desc}</div></div>
-          <div class="mod-count">${count}</div>
-          <div class="chev">${ICONS.chev}</div>
-        </div>
-      `;
-    });
-    html += `</div></div>`;
-  });
-
   html += `<div class="bottom-pad"></div>`;
-  app.innerHTML = html;
+  return html;
 }
 
-function renderDetail(key){
-  const cfg = MODULES[key];
-  const entries = sortedEntries(key);
+function buildTabPageHtml(tabKey){
+  const groupName = TAB_TO_GROUP[tabKey];
+  const keys = Object.keys(MODULES).filter(k=>MODULES[k].group===groupName);
   let html = `
     <div class="topbar solid">
-      <div class="tb-btn" onclick="goHome()">${ICONS.back}</div>
+      <div class="tb-spacer"></div>
+      <div class="tb-title">${groupName}</div>
+      <div class="tb-spacer"></div>
+    </div>
+  `;
+
+  if(tabKey==='health'){
+    const {reminders, medTasks} = getTodoData();
+    const todoHtml = renderTodoSection(reminders, medTasks);
+    if(todoHtml){
+      html += `<div style="margin:14px 18px 0;">${todoHtml}</div>`;
+    }
+  }
+
+  html += `<div class="group" style="margin-top:18px;"><div class="group-card">`;
+  keys.forEach(k=>{
+    const cfg = MODULES[k];
+    const count = state.data[k].length;
+    html += `
+      <div class="mod-row" onclick="goTo('${k}')">
+        <div class="mod-icon">${cfg.icon}</div>
+        <div class="mod-text"><div class="t">${cfg.label}</div><div class="d">${cfg.desc}</div></div>
+        <div class="mod-count">${count}</div>
+        <div class="chev">${ICONS.chev}</div>
+      </div>
+    `;
+  });
+  html += `</div></div><div class="bottom-pad"></div>`;
+  return html;
+}
+
+function buildDetailHtml(key){
+  const cfg = MODULES[key];
+  const entries = sortedEntries(key);
+  const backTab = GROUP_TO_TAB[cfg.group] || 'home';
+  let html = `
+    <div class="topbar solid">
+      <div class="tb-btn" onclick="goTab('${backTab}')">${ICONS.back}</div>
       <div class="tb-title">${cfg.label}</div>
       <div class="tb-spacer"></div>
     </div>
@@ -869,7 +1066,7 @@ function renderDetail(key){
   }
 
   html += `</div><button class="fab" onclick="openForm('${key}')">${ICONS.plus}</button>`;
-  app.innerHTML = html;
+  return html;
 }
 
 function escapeHtml(str){
@@ -975,6 +1172,7 @@ function renderHealthSummary(entries){
 /* ================= Navigation ================= */
 function goTo(key){ state.view = key; window.scrollTo(0,0); render(); }
 function goHome(){ state.view = 'home'; window.scrollTo(0,0); render(); }
+function goTab(tabKey){ state.view = tabKey; window.scrollTo(0,0); render(); }
 
 /* ================= Sheet (modal) ================= */
 const overlay = document.getElementById('sheetOverlay');
@@ -1010,6 +1208,82 @@ function runConfirmAction(){
   if(fn) fn();
 }
 
+/* ---- Medication sub-form (used within 病历/medical entries) ---- */
+let formHasMeds = false;
+let formMeds = [];
+
+function medMethodOptions(sel){
+  return ['口服','注射','外用','滴眼','滴耳','其他'].map(o=>`<option value="${o}" ${sel===o?'selected':''}>${o}</option>`).join('');
+}
+
+function medsListHtml(){
+  let html = formMeds.map((m,i)=>`
+    <div class="med-card">
+      <div class="med-card-head">
+        <span>药品 ${i+1}</span>
+        <span class="med-remove" onclick="removeMedRow(${i})">删除</span>
+      </div>
+      <div class="field"><label>药品名称</label><input id="med_name_${i}" type="text" placeholder="如：阿莫西林" value="${escapeHtml(m.name||'')}"></div>
+      <div class="field"><label>总量</label><input id="med_qty_${i}" type="text" placeholder="如：1盒 / 10片" value="${escapeHtml(m.qty||'')}"></div>
+      <div class="field"><label>服用方式</label><select id="med_method_${i}">${medMethodOptions(m.method)}</select></div>
+      <div class="field" style="display:flex; gap:10px;">
+        <div style="flex:1;"><label style="display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;">一天几次</label><input id="med_times_${i}" type="number" min="1" value="${m.timesPerDay||1}"></div>
+        <div style="flex:1;"><label style="display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;">吃几天</label><input id="med_days_${i}" type="number" min="1" value="${m.days||3}"></div>
+      </div>
+      <div class="field" style="margin-bottom:0;"><label>开始日期</label><input id="med_start_${i}" type="date" value="${m.startDate||todayStr()}"></div>
+    </div>
+  `).join('');
+  html += `<div style="text-align:center; margin:2px 0 4px;"><span style="font-size:12.5px; color:var(--gold); font-weight:600; cursor:pointer;" onclick="addMedRow()">＋ 添加药品</span></div>`;
+  return html;
+}
+
+function medsToggleHtml(){
+  return `
+    <div class="field">
+      <label>是否开药 / 打针</label>
+      <div class="seg">
+        <div class="seg-opt ${!formHasMeds?'active':''}" onclick="setHasMeds(false)">否</div>
+        <div class="seg-opt ${formHasMeds?'active':''}" onclick="setHasMeds(true)">是</div>
+      </div>
+    </div>
+    <div id="medsListWrap">${formHasMeds ? medsListHtml() : ''}</div>
+  `;
+}
+
+function syncMedsFromDOM(){
+  formMeds.forEach((m,i)=>{
+    const nameEl = document.getElementById('med_name_'+i);
+    if(!nameEl) return; // rows aren't rendered while 是否开药=否
+    m.name = nameEl.value.trim();
+    m.qty = document.getElementById('med_qty_'+i).value.trim();
+    m.method = document.getElementById('med_method_'+i).value;
+    m.timesPerDay = parseInt(document.getElementById('med_times_'+i).value,10) || 1;
+    m.days = parseInt(document.getElementById('med_days_'+i).value,10) || 1;
+    m.startDate = document.getElementById('med_start_'+i).value || todayStr();
+  });
+}
+
+function setHasMeds(v){
+  syncMedsFromDOM();
+  formHasMeds = v;
+  if(formHasMeds && formMeds.length===0){
+    formMeds.push({id:uid(), name:'', qty:'', method:'口服', timesPerDay:1, days:3, startDate:todayStr(), log:{}, stopped:false});
+  }
+  document.getElementById('medsSection').innerHTML = medsToggleHtml();
+}
+
+function addMedRow(){
+  syncMedsFromDOM();
+  formMeds.push({id:uid(), name:'', qty:'', method:'口服', timesPerDay:1, days:3, startDate:todayStr(), log:{}, stopped:false});
+  document.getElementById('medsListWrap').innerHTML = medsListHtml();
+}
+
+function removeMedRow(idx){
+  syncMedsFromDOM();
+  formMeds.splice(idx,1);
+  document.getElementById('medsListWrap').innerHTML = formHasMeds ? medsListHtml() : '';
+}
+
 function openForm(key, entry=null){
   const cfg = MODULES[key];
   const fields = getFields(key);
@@ -1031,6 +1305,13 @@ function openForm(key, entry=null){
     }
   }).join('');
 
+  let medsHtml = '';
+  if(key==='medical'){
+    formHasMeds = isEdit ? !!entry.hasMeds : false;
+    formMeds = (isEdit && Array.isArray(entry.meds)) ? entry.meds.map(m=>({...m, log: m.log?{...m.log}:{}})) : [];
+    medsHtml = `<div id="medsSection">${medsToggleHtml()}</div>`;
+  }
+
   sheetContent.innerHTML = `
     <div class="sheet-grip"></div>
     <div class="sheet-head">
@@ -1038,6 +1319,7 @@ function openForm(key, entry=null){
       <div class="sheet-close" onclick="closeSheet()">取消</div>
     </div>
     ${fieldsHtml}
+    ${medsHtml}
     <div class="btn-row">
       ${isEdit? `<button class="btn btn-danger" onclick="deleteEntry('${key}','${entry.id}')">删除</button>`:''}
       <button class="btn btn-primary" onclick="saveEntry('${key}'${isEdit? `,'${entry.id}'`:''})">保存</button>
@@ -1060,6 +1342,11 @@ function saveEntry(key, id=null){
   if(PET_SCOPED.includes(key) && state.pets.length<=1){
     obj.petId = state.pets[0] ? state.pets[0].id : '';
   }
+  if(key==='medical'){
+    syncMedsFromDOM();
+    obj.hasMeds = formHasMeds;
+    obj.meds = formHasMeds ? formMeds.filter(m=>m.name && m.name.trim()) : [];
+  }
   if(id){
     const idx = state.data[key].findIndex(e=>e.id===id);
     state.data[key][idx] = obj;
@@ -1080,6 +1367,18 @@ function deleteEntry(key, id){
   showToast('已删除');
 }
 
+function toggleMedStopped(entryId, medId){
+  const entry = state.data.medical.find(e=>e.id===entryId);
+  if(!entry) return;
+  const med = (entry.meds||[]).find(m=>m.id===medId);
+  if(!med) return;
+  med.stopped = !med.stopped;
+  saveArr('medical', state.data.medical);
+  closeSheet();
+  render();
+  showToast(med.stopped? '已停用':'已重新启用');
+}
+
 function openEntryDetail(key, id){
   const cfg = MODULES[key];
   const fields = getFields(key);
@@ -1098,6 +1397,36 @@ function openEntryDetail(key, id){
   if(key==='health' && entry.reminderStatus==='done'){
     rows += `<div class="row"><div class="k">提醒状态</div><div class="v" style="color:var(--good);">已完成</div></div>`;
   }
+
+  let medsDetailHtml = '';
+  if(key==='medical' && entry.hasMeds && Array.isArray(entry.meds) && entry.meds.length){
+    const today = todayStr();
+    const now = new Date(today+'T00:00:00');
+    medsDetailHtml = `<div style="margin-top:6px;"><div class="group-label" style="margin:0 0 8px;">用药信息</div>` +
+      entry.meds.map(m=>{
+        const days = parseInt(m.days,10)||1;
+        const start = new Date((m.startDate||today)+'T00:00:00');
+        const end = new Date(start.getTime()+(days-1)*86400000);
+        let statusText, statusColor;
+        if(m.stopped){ statusText='已停用'; statusColor='var(--ink-faint)'; }
+        else if(now>end){ statusText='已完成疗程'; statusColor='var(--good)'; }
+        else if(now<start){ statusText='未开始'; statusColor='var(--ink-faint)'; }
+        else{ statusText='进行中 · 第'+(Math.floor((now-start)/86400000)+1)+'/'+days+'天'; statusColor='var(--gold)'; }
+        return `
+          <div class="med-card">
+            <div class="med-card-head">
+              <span style="font-weight:600; color:var(--ink); font-size:13.5px;">${escapeHtml(m.name)}</span>
+              <span style="font-size:11.5px; cursor:pointer; color:var(--gold);" onclick="toggleMedStopped('${entry.id}','${m.id}')">${m.stopped?'重新启用':'停用'}</span>
+            </div>
+            <div style="font-size:12.5px; color:var(--ink-soft); line-height:1.8;">
+              ${escapeHtml(m.qty||'')} · ${escapeHtml(m.method||'')} · 每天${m.timesPerDay||1}次 · 共${days}天<br>
+              <span style="color:${statusColor}; font-weight:600;">${statusText}</span>
+            </div>
+          </div>
+        `;
+      }).join('') + `</div>`;
+  }
+
   sheetContent.innerHTML = `
     <div class="sheet-grip"></div>
     <div class="sheet-head">
@@ -1105,6 +1434,7 @@ function openEntryDetail(key, id){
       <div class="sheet-close" onclick="closeSheet()">关闭</div>
     </div>
     <div class="detail-sheet-body">${rows}</div>
+    ${medsDetailHtml}
     <div class="btn-row" style="margin-top:16px;">
       <button class="btn btn-ghost" onclick="openForm('${key}', state.data['${key}'].find(e=>e.id==='${id}'))">编辑</button>
       <button class="btn btn-danger" onclick="deleteEntry('${key}','${id}')">删除</button>
