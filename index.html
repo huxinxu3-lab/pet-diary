@@ -696,9 +696,9 @@ function buildModules(){
 }
 
 const GROUP_ORDER = ['日常','健康','生活','其他'];
-const TAB_KEYS = ['daily','health','life','other'];
-const GROUP_TO_TAB = {'日常':'daily','健康':'health','生活':'life','其他':'other'};
-const TAB_TO_GROUP = {'daily':'日常','health':'健康','life':'生活','other':'其他'};
+const TAB_KEYS = ['daily','careTab','life','other'];
+const GROUP_TO_TAB = {'日常':'daily','健康':'careTab','生活':'life','其他':'other'};
+const TAB_TO_GROUP = {'daily':'日常','careTab':'健康','life':'生活','other':'其他'};
 
 /* ================= App state ================= */
 const state = {
@@ -772,7 +772,7 @@ function renderTabBarHtml(){
   const items = [
     {key:'home', label:'首页', icon:ICONS.home, action:"goHome()"},
     {key:'daily', label:'日常', icon:ICONS.calendar, action:"goTab('daily')"},
-    {key:'health', label:'健康', icon:ICONS.heart, action:"goTab('health')"},
+    {key:'careTab', label:'健康', icon:ICONS.heart, action:"goTab('careTab')"},
     {key:'life', label:'生活', icon:ICONS.box, action:"goTab('life')"},
     {key:'other', label:'其他', icon:ICONS.note, action:"goTab('other')"},
   ];
@@ -991,7 +991,7 @@ function buildTabPageHtml(tabKey){
     </div>
   `;
 
-  if(tabKey==='health'){
+  if(tabKey==='careTab'){
     const {reminders, medTasks} = getTodoData();
     const todoHtml = renderTodoSection(reminders, medTasks);
     if(todoHtml){
